@@ -1,0 +1,156 @@
+package runner
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/go-cmd/cmd"
+
+	log "confinit/pkg/log"
+)
+
+// Executor
+type Runner struct {
+	command *cmd.Cmd
+	show    bool
+	Env     map[string]string
+	Cmd     []string
+	Timeout int
+	Dir     string
+	log     log.Logger
+	status  *Status
+}
+
+type Status cmd.Status
+
+// New is the contructor
+func NewRunner(l log.Logger) *Runner {
+	p := Runner{
+		show:    true,
+		Env:     make(map[string]string),
+		log:     l,
+		Timeout: 60,
+		status:  nil,
+	}
+	return &p
+}
+
+func (p *Runner) SetEnv(env map[string]string) {
+	p.Env = env
+}
+
+func (p *Runner) SetTimeout(t int) {
+	p.Timeout = t
+}
+
+func (p *Runner) SetDir(d string) {
+	p.Dir = d
+}
+
+func (p *Runner) Command(command []string) {
+	bin := command[0]
+	args := []string{}
+	if len(command) > 1 {
+		args = command[1:]
+	}
+	p.Cmd = command
+	cmdOptions := cmd.Options{
+		Buffered:  false,
+		Streaming: true,
+	}
+	p.command = cmd.NewCmdOptions(cmdOptions, bin, args...)
+	p.command.Dir = p.Dir
+	for key, value := range p.Env {
+		p.command.Env = append(p.command.Env, fmt.Sprintf("%s=%s", key, value))
+	}
+	p.show = true
+}
+
+func (p *Runner) run() *Status {
+	statusChan := p.command.Start()
+	if p.Timeout > 0 {
+		// Stop command after timeout
+		go func() {
+			<-time.After(time.Duration(p.Timeout) * time.Second)
+			p.log.Errorf("Timeout (%d s). Killing process", p.Timeout)
+			p.command.Stop()
+		}()
+	}
+	clock := time.After(time.Duration(100) * time.Millisecond)
+	running := true
+	for running {
+		console := true
+		for console {
+			select {
+			case stdoutLine := <-p.command.Stdout:
+				p.print(stdoutLine, false, false)
+			case stderrLine := <-p.command.Stderr:
+				p.print(stderrLine, true, false)
+			case <-clock:
+				console = false
+				break
+			}
+		}
+		// Check if command is done
+		select {
+		case finalStatus := <-statusChan:
+			running = false
+			if finalStatus.Exit == 0 {
+				p.print("Exit", false, true)
+			} else {
+				errtxt := "Error"
+				if finalStatus.Error != nil {
+					errtxt = finalStatus.Error.Error()
+				}
+				p.print(errtxt, true, true)
+			}
+			break
+		default:
+			// no, still running
+		}
+	}
+	status := Status(p.command.Status())
+	return &status
+}
+
+func (p *Runner) Run() (int, error) {
+	status := p.run()
+	if status.Exit != 0 {
+		if status.Error == nil {
+			status.Error = fmt.Errorf("Error!")
+		}
+	}
+	p.status = status
+	return status.Exit, status.Error
+}
+
+func (p *Runner) Status() *Status {
+	return p.status
+}
+
+func (p *Runner) String() string {
+	return strings.Join(p.Cmd, " ")
+}
+
+func (p *Runner) print(out string, err, rc bool) {
+	status := p.command.Status()
+	if p.show {
+		p.log.Debugf("Running (pid %d): %s", status.PID, strings.Join(p.Cmd, " "))
+		p.show = false
+	}
+	// finished
+	if rc {
+		if err {
+			p.log.Errorf("Done (pid %d): %s %d", status.PID, out, status.Exit)
+		} else {
+			p.log.Debugf("Done (pid %d): %s %d", status.PID, out, status.Exit)
+		}
+	} else {
+		if err {
+			p.log.Errorf("%d: %s", status.PID, out)
+		} else {
+			p.log.Debugf("%d: %s", status.PID, out)
+		}
+	}
+}

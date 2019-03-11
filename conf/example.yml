@@ -1,0 +1,43 @@
+log-output: split
+log-level: debug
+
+
+env:
+    A: B
+    c: D
+    eeee: "hola mundo"
+
+
+start:
+    cmd: ["pwd"]
+
+finish:
+    cmd: ["env"]
+
+process:
+  - source: test
+    operations:
+      - destination: /tmp/dest
+        regex: '.*\.go'
+      - destination: /tmp/templates
+        regex: '.*\.template'
+        template: true
+        data:
+          hola: adios
+        permissions:
+          - glob: "*.txt"
+            mode: "0600"
+            user: jriguera
+            group: jriguera
+      - destination: /tmp/temp
+        regex: '.*\.template'
+        default:
+          mode:
+            file: "0755"
+        template: true
+        command:
+          cmd: ["{{.Destination}}"]
+          env:
+            MIPI: pepe
+        data:
+          hola: hola
