@@ -1,11 +1,9 @@
 PROJECTNAME = $(shell basename "$(PWD)")
 BINARY = ${PROJECTNAME}
 
-#BUILD := $(shell git rev-parse HEAD)
-#VERSION := $(shell cat VERSION)
-BUILD = aaaa
-VERSION = 1
-#CHANGES := $(shell test -n "$$(git status --porcelain)" && echo '+CHANGES' || true)
+BUILD := $(shell git rev-parse HEAD)
+VERSION := $(shell cat VERSION)
+CHANGES := $(shell test -n "$$(git status --porcelain)" && echo '+CHANGES' || true)
 PKGS := $(shell go list ./... | grep -v /vendor)
 LDFLAGS := -X main.Build=$(BUILD) -X main.Version=$(VERSION)
 
