@@ -4,19 +4,20 @@ confinit
 Local configuration management for RaspberryPI and Linux
 
 
+Development
+===========
+
+Golang
+
+
 Makefile
-========
+--------
 
-```
-make VERSION=v2.0.0 release -j3
-```
-
-https://sahilm.com/makefiles-for-golang/
-
+Manages releases and binaries. `make build` generates binaries for Linux *amd64* and *arm32*
 
 
 Modules
-=======
+-------
 
 Go 1.11 has a feature `vgo` which will replace `dep`. To use `vgo`,
 see https://github.com/golang/go/wiki/Modules.
