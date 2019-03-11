@@ -1,0 +1,4 @@
+*.log
+/releases/
+/test/
+/build/
