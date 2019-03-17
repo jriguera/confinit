@@ -1,21 +1,20 @@
-log-output: split
-log-level: debug
-
+logoutput: split
+loglevel: debug
+datafile: conf/data.yml
 
 env:
     A: B
     c: D
     eeee: "hola mundo"
 
-
 start:
     cmd: ["pwd"]
 
 finish:
-    cmd: ["env"]
+    cmd: ["pwd"]
 
 process:
-  - source: test
+  - source: cmd
     operations:
       - destination: /tmp/dest
         regex: '.*\.go'
