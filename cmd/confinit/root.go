@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 Jose Riguera <jriguera@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ func Run(version, build string) {
 	Build = build
 	if err := Cmd.Execute(); err != nil {
 		fmt.Printf("Errors:\n")
-		fmt.Printf("%s\n", err)
+		fmt.Printf("\t%s\n\n", err)
 		os.Exit(1)
 	}
 }
