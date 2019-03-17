@@ -2,7 +2,7 @@ PROJECTNAME = $(shell basename "$(PWD)")
 BINARY = ${PROJECTNAME}
 
 BUILD := $(shell git rev-parse HEAD)
-VERSION := $(shell cat VERSION)
+VERSION := $(shell head -n1 VERSION)
 CHANGES := $(shell test -n "$$(git status --porcelain)" && echo '+CHANGES' || true)
 PKGS := $(shell go list ./... | grep -v /vendor)
 LDFLAGS := -X main.Build=$(BUILD) -X main.Version=$(VERSION)
@@ -26,24 +26,30 @@ GOLINT = $(GOBIN)/golint
 ERRCHECK = $(GOBIN)/errcheck
 STATICCHECK = $(GOBIN)/staticcheck
 
+.PHONY: all
+all: test build
+
 .PHONY: clean-all
-clean-all: clean clean-vendor clean-release
+clean-all: clean clean-vendor clean-build
 
 .PHONY: clean
 clean:
+	@echo "*** Deleting go resources ***"
 	$(GOCLEAN) -i ./...
-	rm -Rf build/*
 
 .PHONY: clean-vendor
 clean-vendor:
+	@echo "*** Deleting vendor packages ***"
 	find $(CURDIR)/vendor -type d -print0 2>/dev/null | xargs -0 rm -Rf
 
-.PHONY: clean-release
-clean-releases:
-	rm -Rf releases/*
+.PHONY: clean-build
+clean-build:
+	@echo "*** Deleting builds ***"
+	rm -Rf build/*
 
 .PHONY: test
 test:
+	@echo "*** Running tests ***"
 	$(GOTEST) -v ./...
 
 .PHONY: lint
@@ -88,12 +94,14 @@ $(GOMETALINTER):
 
 .PHONY: $(AMD64)
 $(AMD64):
+	@echo "*** Building amd64 $@ binary ***"
 	@mkdir -p build
 	$(eval OS := $(word 1, $@))
 	GOOS=${OS} GOARCH=amd64 ${GOBUILD} -ldflags "${LDFLAGS}" -o build/${BINARY}-${VERSION}-${OS}-amd64
 
 .PHONY: $(ARM32)
 $(ARM32):
+	@echo "*** Building arm $@ binary ***"
 	@mkdir -p build
 	$(eval ARM := $(word 1, $@))
 	GOOS=linux GOARCH=arm GOARM=${ARM} ${GOBUILD} -ldflags "${LDFLAGS}" -o build/${BINARY}-${VERSION}-linux-arm${ARM}
