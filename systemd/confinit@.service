@@ -1,0 +1,21 @@
+[Unit]
+Description=Manages configuration files from %I
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=cloud-init-local.service
+Before=shutdown.target
+Before=sysinit.target
+Conflicts=shutdown.target
+ConditionFileIsExecutable=/bin/confinit
+ConditionPathExists=/%I/confinit.yml
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+User=root
+Group=root
+ExecStart=/bin/confinit --config /%I/confinit.yml
+
+[Install]
+WantedBy=cloud-init.target
