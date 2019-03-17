@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -14,11 +15,13 @@ import (
 	"confinit/pkg/runner"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type Program struct {
 	Build        string
 	Config       *config.Config
+	Data         map[string]string
 	ConfigArg    string
 	Configurator config.Configurator
 }
@@ -46,9 +49,41 @@ func (p *Program) LoadConfig() error {
 			return errc
 		}
 		p.Config = cfg
-		return nil
+		return p.LoadData()
 	}
 	return err
+}
+
+func (p *Program) LoadData() error {
+	data := make(map[string]string)
+	log := p.Configurator.Logger()
+	if p.Config == nil {
+		return nil
+	}
+	if p.Config.DataFile == "" {
+		return nil
+	}
+	datafile := p.Config.DataFile
+	if _, err := os.Stat(p.Config.DataFile); os.IsNotExist(err) {
+		log.Errorf("Data file not loaded: %s", err)
+		return err
+	}
+	log.Infof("Loading data from file: %s", datafile)
+	dataloader := viper.New()
+	basefile := filepath.Base(datafile)
+	dataloader.SetConfigName(strings.TrimSuffix(basefile, filepath.Ext(basefile)))
+	dataloader.AddConfigPath(filepath.Dir(datafile))
+	dataloader.SetConfigType(filepath.Ext(basefile)[1:])
+	if err := dataloader.ReadInConfig(); err != nil {
+		log.Errorf("Error reading data file %s: %s", datafile, err)
+		return err
+	}
+	if err := dataloader.Unmarshal(&data); err != nil {
+		log.Fatalf("Format of data file not correct, %s", err.Error())
+		return err
+	}
+	p.Data = data
+	return nil
 }
 
 func (p *Program) GetJsonConfig() ([]byte, error) {
@@ -100,7 +135,8 @@ func (p *Program) operation(f *fs.Fs, c *config.Operation) error {
 	dirmode, _ := strconv.ParseUint(c.Default.Mode.Dir, 8, 32)
 	filemode, _ := strconv.ParseUint(c.Default.Mode.File, 8, 32)
 	a.SetDefaultModes(os.FileMode(dirmode), os.FileMode(filemode))
-	a.AddData(c.Data)
+	a.AddData(p.Data) // Global
+	a.AddData(c.Data) // The one on this operation
 	for i, pe := range c.Perms {
 		mode, _ := strconv.ParseUint(pe.Mode, 8, 32)
 		errp := a.SetPermissions(pe.Glob, pe.User, pe.Group, os.FileMode(mode))
@@ -157,7 +193,7 @@ func (p *Program) Process() (int, error) {
 	if len(errs) > 0 {
 		msg := ""
 		for _, e := range errs {
-			msg += fmt.Sprintf("\t%s\n", e.Error())
+			msg += fmt.Sprintf("%s\n", e.Error())
 		}
 		return 1, fmt.Errorf("%s", msg)
 	}

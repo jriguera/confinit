@@ -60,9 +60,10 @@ type Runner struct {
 
 // Config the application's configuration
 type Config struct {
-	LogOutput string            `mapstructure:"log-output" valid:"required" default:"split"`
-	LogLevel  string            `mapstructure:"log-level" valid:"in(debug|info|warn|error|panic|fatal),required" default:"info" flag:"log level"`
+	LogOutput string            `mapstructure:"logoutput" valid:"required" default:"split"`
+	LogLevel  string            `mapstructure:"loglevel" valid:"in(debug|info|warn|error|panic|fatal),required" default:"info" flag:"program log level"`
 	Env       map[string]string `mapstructure:"env"`
+	DataFile  string            `mapstructure:"datafile" flag:"file for global template data key/values"`
 	Start     *Runner           `mapstructure:"start"`
 	Finish    *Runner           `mapstructure:"finish"`
 	Process   []Process         `mapstructure:"process"`
