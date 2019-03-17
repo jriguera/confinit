@@ -123,7 +123,7 @@ func (c *configurator) LoadConfig(key string) (*Config, error) {
 	ctxlog := log.WithField("configfile", c.viper.ConfigFileUsed())
 	ctxlog.Debug("Loading configuration")
 	if err := c.viper.Unmarshal(cfg); err != nil {
-		ctxlog.Fatalf("Error parsing configuration file, %s", err.Error())
+		ctxlog.Fatalf("Format of configuration file not correct, %s", err.Error())
 		return nil, err
 	}
 	// Set default config
