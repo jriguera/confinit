@@ -1,4 +1,5 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
+set -e
 # set -o pipefail  # exit if pipe command fails
 [ -z "$DEBUG" ] || set -x
 
