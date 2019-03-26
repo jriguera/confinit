@@ -28,7 +28,7 @@ import (
 
 type Templator struct {
 	*Replicator
-	Data    map[string]string
+	Data    map[string]interface{}
 	Env     map[string]string
 	SkipExt bool
 }
@@ -45,7 +45,7 @@ func NewTemplator(glob, dst string, force, skipext bool) (*Templator, error) {
 	}
 	r := Templator{
 		Replicator: rpc,
-		Data:       make(map[string]string),
+		Data:       make(map[string]interface{}),
 		Env:        env,
 		SkipExt:    skipext,
 	}
@@ -58,13 +58,16 @@ func (ft *Templator) AddEnv(env map[string]string) {
 	}
 }
 
-func (ft *Templator) AddData(data map[string]string) {
+func (ft *Templator) AddData(data map[string]interface{}) {
 	for key, value := range data {
 		ft.Data[key] = value
 	}
 }
 
 type TemplateData struct {
+	IsDir           bool
+	Size            int64
+	Mode            string
 	SourceBaseDir   string
 	Source          string
 	Filename        string
@@ -76,18 +79,21 @@ type TemplateData struct {
 	DstBaseDir      string
 	Destination     string
 	DestinationPath string
-	Data            map[string]string
+	Data            map[string]interface{}
 	Env             map[string]string
 }
 
-func (ft *Templator) NewTemplateData(basedir, f string) *TemplateData {
+func (ft *Templator) NewTemplateData(basedir, f string, i os.FileInfo) *TemplateData {
 	dstf := f
-	if ft.SkipExt {
+	if ft.SkipExt && !i.IsDir() {
 		dstf = strings.TrimSuffix(f, filepath.Ext(f))
 	}
 	fullpath := filepath.Join(basedir, f)
 	dstpath := filepath.Join(ft.DstPath, dstf)
 	data := TemplateData{
+		IsDir:           i.IsDir(),
+		Size:            i.Size(),
+		Mode:            i.Mode().String(),
 		SourceFile:      f,
 		SourceBaseDir:   basedir,
 		Source:          filepath.Base(f),
@@ -128,7 +134,7 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	if ft.FileMode != 0 {
 		filemode = ft.FileMode
 	}
-	dst, err := os.OpenFile(data.Destination, os.O_RDWR|os.O_CREATE, filemode)
+	dst, err := os.OpenFile(data.Destination, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filemode)
 	if err != nil {
 		err = fmt.Errorf("Cannot create file %s, %s", data.Destination, err)
 		return err
@@ -146,7 +152,7 @@ func (ft *Templator) Function(base string, path string, i os.FileInfo) (err erro
 		// Using always default mode (is not replicate)
 		err = ft.mkdir(filepath.Join(ft.DstPath, path), i.Mode())
 	} else {
-		tpldata := ft.NewTemplateData(base, path)
+		tpldata := ft.NewTemplateData(base, path, i)
 		err = ft.renderTemplate(tpldata, os.FileMode(0755), i.Mode())
 		if err == nil {
 			err = ft.applyPermissions(tpldata.Destination)

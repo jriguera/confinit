@@ -15,25 +15,64 @@
 package actions
 
 import (
+	"fmt"
 	"os"
+	"strings"
+
+	log "confinit/pkg/log"
 )
 
 type ActionRouter struct {
 	*Runner
+	Condition string
+	PreDelete bool
 }
 
-func NewActionRouter(glob, dst string, force, skipext, render bool) (*ActionRouter, error) {
+func NewActionRouter(glob, dst string, force, skipext, render, predelete bool) (*ActionRouter, error) {
 	r, err := NewRunner(glob, dst, force, skipext, render)
 	if err != nil {
 		return nil, err
 	}
 	a := ActionRouter{
-		Runner: r,
+		Runner:    r,
+		PreDelete: predelete,
 	}
 	return &a, nil
 }
 
+func (a *ActionRouter) SetCondition(c string) {
+	a.Condition = c
+}
+
+func (a *ActionRouter) condition(data *TemplateData) (bool, string, error) {
+	if a.Condition != "" {
+		c, err := a.renderTemplateString("condition", a.Condition, data)
+		if err != nil {
+			return false, "", fmt.Errorf("Cannot render condition '%s', %s", a.Condition, err)
+		}
+		c = strings.TrimSpace(c)
+		if c != "" {
+			return false, c, nil
+		}
+	}
+	return true, "", nil
+}
+
 func (a *ActionRouter) Function(base string, path string, i os.FileInfo) (err error) {
+	tpldata := a.NewTemplateData(base, path, i)
+	if _, err = os.Stat(tpldata.Destination); !os.IsNotExist(err) {
+		if a.PreDelete && !i.IsDir() {
+			if err = os.Remove(tpldata.Destination); err != nil {
+				return
+			}
+		}
+	}
+	if c, msg, errc := a.condition(tpldata); errc != nil {
+		return errc
+	} else if !c {
+		log.Infof("Skipping %s: %s", tpldata.SourceFullPath, msg)
+		return nil
+	}
 	if a.Cmd != "" {
 		err = a.Runner.Function(base, path, i)
 	} else {

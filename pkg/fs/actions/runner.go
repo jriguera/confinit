@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	//log "confinit/pkg/log"
 )
 
 // ActionTemplate is an interface to define a configurator factory
@@ -68,7 +67,7 @@ func (tr *Runner) AddEnv(env map[string]string) {
 }
 
 func (tr *Runner) Function(base string, path string, i os.FileInfo) (err error) {
-	tpldata := tr.NewTemplateData(base, path)
+	tpldata := tr.NewTemplateData(base, path, i)
 	if tr.DstPath != "" {
 		if tr.Render {
 			if err = tr.Templator.Function(base, path, i); err != nil {
