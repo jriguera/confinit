@@ -1,0 +1,7 @@
+{{ .Data.a }}
+
+
+{{ range $key, $value := .Data.complex }}
+> {{ $key }}: {{ $value }}
+{{ end }}
+
