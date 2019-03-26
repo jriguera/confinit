@@ -21,7 +21,7 @@ import (
 type Program struct {
 	Build        string
 	Config       *config.Config
-	Data         map[string]string
+	Data         map[string]interface{}
 	ConfigArg    string
 	Configurator config.Configurator
 }
@@ -55,7 +55,7 @@ func (p *Program) LoadConfig() error {
 }
 
 func (p *Program) LoadData() error {
-	data := make(map[string]string)
+	data := make(map[string]interface{})
 	log := p.Configurator.Logger()
 	if p.Config == nil {
 		return nil
@@ -127,8 +127,8 @@ func (p *Program) RunAll() (err error) {
 func (p *Program) operation(f *fs.Fs, c *config.Operation) error {
 	errs := false
 	log := p.Configurator.Logger()
-	a, err := actions.NewActionRouter(
-		c.Regex, c.DestinationPath, c.Default.Force, c.DelExtension, c.Template)
+	a, err := actions.NewActionRouter(c.Regex, c.DestinationPath,
+		c.Default.Force, c.DelExtension, c.Template, c.PreDelete)
 	if err != nil {
 		return err
 	}
@@ -137,6 +137,7 @@ func (p *Program) operation(f *fs.Fs, c *config.Operation) error {
 	a.SetDefaultModes(os.FileMode(dirmode), os.FileMode(filemode))
 	a.AddData(p.Data) // Global
 	a.AddData(c.Data) // The one on this operation
+	a.SetCondition(c.RenderCondition)
 	for i, pe := range c.Perms {
 		mode, _ := strconv.ParseUint(pe.Mode, 8, 32)
 		errp := a.SetPermissions(pe.Glob, pe.User, pe.Group, os.FileMode(mode))
@@ -201,7 +202,7 @@ func (p *Program) Process() (int, error) {
 }
 
 func (p *Program) RunStart() (int, error) {
-	if p.Config.Start != nil {
+	if p.Config.Start != nil && len(p.Config.Start.Cmd) > 0 {
 		log := p.Configurator.Logger()
 		log.Infof("Running startup program: %s", p.Config.Start.Cmd)
 		return p.runner(p.Config.Start, os.Environ()).Run()
@@ -210,7 +211,7 @@ func (p *Program) RunStart() (int, error) {
 }
 
 func (p *Program) RunFinish(rc map[string]int) (int, error) {
-	if p.Config.Finish != nil {
+	if p.Config.Finish != nil && len(p.Config.Finish.Cmd) > 0 {
 		log := p.Configurator.Logger()
 		env := os.Environ()
 		log.Infof("Running finish program %s", p.Config.Finish.Cmd)

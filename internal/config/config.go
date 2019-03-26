@@ -25,14 +25,16 @@ type Default struct {
 }
 
 type Operation struct {
-	DestinationPath string            `mapstructure:"destination" valid:"configuration"`
-	Default         Default           `mapstructure:"default"`
-	Perms           []*Permissions    `mapstructure:"permissions"`
-	Regex           string            `mapstructure:"regex" default:".*"`
-	Data            map[string]string `mapstructure:"data"`
-	Template        bool              `mapstructure:"template"`
-	DelExtension    bool              `mapstructure:"delextension" default:"true"`
-	Command         *Runner           `mapstructure:"command" valid:"-"`
+	DestinationPath string                 `mapstructure:"destination" valid:"configuration"`
+	Default         Default                `mapstructure:"default"`
+	Perms           []*Permissions         `mapstructure:"permissions"`
+	Regex           string                 `mapstructure:"regex" default:".*"`
+	Data            map[string]interface{} `mapstructure:"data"`
+	Template        bool                   `mapstructure:"template"`
+	DelExtension    bool                   `mapstructure:"delextension" default:"true"`
+	RenderCondition string                 `mapstructure:"rendercondition"`
+	PreDelete       bool                   `mapstructure:"predelete" default:"false"`
+	Command         *Runner                `mapstructure:"command" valid:"-"`
 }
 
 type MatchItem struct {
