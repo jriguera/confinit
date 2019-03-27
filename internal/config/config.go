@@ -32,7 +32,7 @@ type Operation struct {
 	Data            map[string]interface{} `mapstructure:"data"`
 	Template        bool                   `mapstructure:"template"`
 	DelExtension    bool                   `mapstructure:"delextension" default:"true"`
-	RenderCondition string                 `mapstructure:"rendercondition"`
+	RenderCondition string                 `mapstructure:"condition"`
 	PreDelete       bool                   `mapstructure:"predelete" default:"false"`
 	Command         *Runner                `mapstructure:"command" valid:"-"`
 }
