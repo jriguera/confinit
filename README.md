@@ -81,7 +81,7 @@ finish:
 Processing files
 ----------------
 
-The core of the program is defined in the `process` field:
+The functionality of the program is defined in the field `process`:
 
 ```
 # List of source folders. `source` is required and is the folder to clone.
@@ -128,7 +128,16 @@ Operations:
   regex: '.*\.template'
   template: true
   predelete: true
-  rendercondition: '{{ if not .Data.iface }}No interface{{ end }}'
+  condition: '{{ if not .Data.iface }}No interface{{ end }}'
+```
+
+* Execute script
+```
+- command:
+    cmd: ["{{.SourceFullPath}}"]
+    env:
+      EXTRA_VAR: pepe
+  regex: '.*\.sh'
 ```
 
 * Copy and execute script
@@ -161,6 +170,9 @@ Operations:
   data:
     key: value
 ```
+
+The template variables are defined in the file `pkg/fs/actions/templator.go:TemplateData`
+
 
 Development
 ===========
