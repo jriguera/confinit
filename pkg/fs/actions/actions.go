@@ -28,8 +28,8 @@ type ActionRouter struct {
 	PreDelete bool
 }
 
-func NewActionRouter(glob, dst string, force, skipext, render, predelete bool) (*ActionRouter, error) {
-	r, err := NewRunner(glob, dst, force, skipext, render)
+func NewActionRouter(glob, dst string, force, skipext, render, predelete bool, excludes []string) (*ActionRouter, error) {
+	r, err := NewRunner(glob, dst, force, skipext, render, excludes)
 	if err != nil {
 		return nil, err
 	}

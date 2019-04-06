@@ -29,8 +29,8 @@ type Permissions struct {
 	DstPath string
 }
 
-func NewPermissions(glob, dst string, typ fs.FsItemType) (*Permissions, error) {
-	proc, err := fs.NewProcessor(glob, typ)
+func NewPermissions(glob, dst string, typ fs.FsItemType, excludes []string) (*Permissions, error) {
+	proc, err := fs.NewProcessor(glob, typ, excludes)
 	if err != nil {
 		return nil, err
 	}

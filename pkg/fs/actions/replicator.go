@@ -31,8 +31,8 @@ type Replicator struct {
 	FileMode os.FileMode
 }
 
-func NewReplicator(glob, dst string, typ fs.FsItemType, force bool) (*Replicator, error) {
-	perm, err := NewPermissions(glob, dst, typ)
+func NewReplicator(glob, dst string, typ fs.FsItemType, force bool, excludes []string) (*Replicator, error) {
+	perm, err := NewPermissions(glob, dst, typ, excludes)
 	if err != nil {
 		return nil, err
 	}

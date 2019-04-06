@@ -53,11 +53,12 @@ type Permissions struct {
 }
 
 func NewPermissions(glob, uid, gid string, mode os.FileMode, typ FsItemType) (*Permissions, error) {
+	var exclude []string
 	per, err := NewPerm(uid, gid, mode)
 	if err != nil {
 		return nil, err
 	}
-	proc, err := NewProcessor(glob, typ)
+	proc, err := NewProcessor(glob, typ, exclude)
 	if err != nil {
 		return nil, err
 	}

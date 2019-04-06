@@ -34,11 +34,13 @@ const (
 type Process interface {
 	Function(base string, path string, i os.FileInfo) error
 	Match(path string, i os.FileInfo) bool
-	AddItem(path string, i os.FileInfo)
+	AddProcessed(path string, i os.FileInfo)
 	AddError(path string, err error)
 	Type(t FsItemType) bool
-	ListItemErrors() []string
+	ListErrors() []string
 	ListMapErrors() map[string]error
+	ListProcessed() []string
+	ListMapProcessed() map[string]os.FileInfo
 }
 
 func (fs *Fs) Run(f Process) error {
@@ -50,9 +52,8 @@ func (fs *Fs) Run(f Process) error {
 					f.AddError(path, err)
 					log.Errorf("Could not complete process with folder '%s': %s", path, err)
 					e = true
-				} else {
-					f.AddItem(path, fs.files[path])
 				}
+				f.AddProcessed(path, fs.dirs[path])
 			}
 		}
 	}
@@ -63,14 +64,13 @@ func (fs *Fs) Run(f Process) error {
 					f.AddError(path, err)
 					log.Errorf("Could not complete process with file '%s': %s", path, err)
 					e = true
-				} else {
-					f.AddItem(path, fs.files[path])
 				}
+				f.AddProcessed(path, fs.dirs[path])
 			}
 		}
 	}
 	if e {
-		return fmt.Errorf("There were errors running processes on some items: %v", f.ListItemErrors())
+		return fmt.Errorf("There were errors running processes on some items: %v", f.ListErrors())
 	}
 	return nil
 }
@@ -80,23 +80,25 @@ func (fs *Fs) Run(f Process) error {
 // Processor implments Process interface and is the base class for all its subclasses
 // defined in actions package
 type Processor struct {
-	Regex  *regexp.Regexp
-	FsType FsItemType
-	Items  map[string]os.FileInfo
-	Errors map[string]error
+	Regex     *regexp.Regexp
+	FsType    FsItemType
+	Exclude   []string
+	Processed map[string]os.FileInfo
+	Errors    map[string]error
 }
 
-func NewProcessor(regex string, t FsItemType) (*Processor, error) {
+func NewProcessor(regex string, t FsItemType, exclude []string) (*Processor, error) {
 	pattern, err := regexp.Compile(regex)
 	if err != nil {
 		err = fmt.Errorf("Invalid pattern '%s', %s", regex, err)
 		return nil, err
 	}
 	p := Processor{
-		Regex:  pattern,
-		Items:  make(map[string]os.FileInfo),
-		Errors: make(map[string]error),
-		FsType: t,
+		Regex:     pattern,
+		Processed: make(map[string]os.FileInfo),
+		Errors:    make(map[string]error),
+		Exclude:   exclude,
+		FsType:    t,
 	}
 	return &p, nil
 }
@@ -106,20 +108,33 @@ func (p *Processor) Type(t FsItemType) bool {
 }
 
 func (p *Processor) Match(path string, i os.FileInfo) bool {
+	for _, exc := range p.Exclude {
+		if exc == path {
+			return false
+		}
+	}
 	return p.Regex.MatchString(path)
 }
 
-func (p *Processor) AddItem(path string, i os.FileInfo) {
-	p.Items[path] = i
+func (p *Processor) AddProcessed(path string, i os.FileInfo) {
+	p.Processed[path] = i
 }
 
 func (p *Processor) AddError(path string, err error) {
 	p.Errors[path] = err
 }
 
-func (p *Processor) ListItemErrors() []string {
+func (p *Processor) ListErrors() []string {
 	v := make([]string, 0, len(p.Errors))
-	for k, _ := range p.Errors {
+	for k := range p.Errors {
+		v = append(v, k)
+	}
+	return v
+}
+
+func (p *Processor) ListProcessed() []string {
+	v := make([]string, 0, len(p.Processed))
+	for k := range p.Processed {
 		v = append(v, k)
 	}
 	return v
@@ -127,6 +142,10 @@ func (p *Processor) ListItemErrors() []string {
 
 func (p *Processor) ListMapErrors() map[string]error {
 	return p.Errors
+}
+
+func (p *Processor) ListMapProcessed() map[string]os.FileInfo {
+	return p.Processed
 }
 
 func (p *Processor) Function(base string, path string, i os.FileInfo) error {

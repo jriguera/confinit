@@ -33,8 +33,8 @@ type Templator struct {
 	SkipExt bool
 }
 
-func NewTemplator(glob, dst string, force, skipext bool) (*Templator, error) {
-	rpc, err := NewReplicator(glob, dst, fs.FsItemFile, force)
+func NewTemplator(glob, dst string, force, skipext bool, excludes []string) (*Templator, error) {
+	rpc, err := NewReplicator(glob, dst, fs.FsItemFile, force, excludes)
 	if err != nil {
 		return nil, err
 	}

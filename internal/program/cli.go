@@ -124,13 +124,13 @@ func (p *Program) RunAll() (err error) {
 	return
 }
 
-func (p *Program) operation(f *fs.Fs, c *config.Operation) error {
+func (p *Program) operation(f *fs.Fs, c *config.Operation, excludes []string) ([]string, error) {
 	errs := false
 	log := p.Configurator.Logger()
 	a, err := actions.NewActionRouter(c.Regex, c.DestinationPath,
-		c.Default.Force, c.DelExtension, c.Template, c.PreDelete)
+		c.Default.Force, c.DelExtension, c.Template, c.PreDelete, excludes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	dirmode, _ := strconv.ParseUint(c.Default.Mode.Dir, 8, 32)
 	filemode, _ := strconv.ParseUint(c.Default.Mode.File, 8, 32)
@@ -166,12 +166,13 @@ func (p *Program) operation(f *fs.Fs, c *config.Operation) error {
 	if errs && err == nil {
 		err = fmt.Errorf("Not all permissions were applied!")
 	}
-	return err
+	return a.ListProcessed(), err
 }
 
 func (p *Program) Process() (int, error) {
 	log := p.Configurator.Logger()
 	errs := []error{}
+	processed := []string{}
 	for i, proc := range p.Config.Process {
 		f := fs.New(
 			fs.SkipDirGlob(proc.Match.Folder.Skip),
@@ -186,8 +187,12 @@ func (p *Program) Process() (int, error) {
 		}
 		for j, oper := range proc.Operations {
 			log.Infof("Processing #%d operation in %s", j+1, proc.Source)
-			if err := p.operation(f, oper); err != nil {
+			done, err := p.operation(f, oper, processed)
+			if err != nil {
 				errs = append(errs, fmt.Errorf("#%d %s: %s", i+1, proc.Source, err))
+			}
+			if proc.ExcludeDone {
+				processed = append(processed, done...)
 			}
 		}
 	}

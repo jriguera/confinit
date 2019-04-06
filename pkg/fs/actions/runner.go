@@ -38,8 +38,8 @@ type Runner struct {
 	Dir     string
 }
 
-func NewRunner(glob, dst string, force, skipext, render bool) (*Runner, error) {
-	tpl, err := NewTemplator(glob, dst, force, skipext)
+func NewRunner(glob, dst string, force, skipext, render bool, excludes []string) (*Runner, error) {
+	tpl, err := NewTemplator(glob, dst, force, skipext, excludes)
 	if err != nil {
 		return nil, err
 	}

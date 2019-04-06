@@ -48,9 +48,10 @@ type Match struct {
 }
 
 type Process struct {
-	Source     string       `mapstructure:"source" valid:"required"`
-	Match      Match        `mapstructure:"match" valid:"required"`
-	Operations []*Operation `mapstructure:"operations" valid:"required"`
+	Source      string       `mapstructure:"source" valid:"required"`
+	Match       Match        `mapstructure:"match" valid:"required"`
+	ExcludeDone bool         `mapstructure:"excludedone" default:"true"`
+	Operations  []*Operation `mapstructure:"operations" valid:"required"`
 }
 
 type Runner struct {
