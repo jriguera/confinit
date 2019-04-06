@@ -21,7 +21,7 @@ type DefaultMode struct {
 
 type Default struct {
 	Mode  DefaultMode `mapstructure:"mode" valid:"required"`
-	Force *bool       `mapstructure:"force" default:"false"`
+	Force *bool       `mapstructure:"force" default:"true"`
 }
 
 type Operation struct {
