@@ -2,13 +2,12 @@ package config
 
 import (
 	"fmt"
-	"path/filepath"
-	"reflect"
-	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"path/filepath"
+	"reflect"
+	"strings"
 
 	"confinit/pkg/log"
 )

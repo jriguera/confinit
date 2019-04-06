@@ -87,9 +87,12 @@ The functionality of the program is defined in the field `process`:
 # List of source folders. `source` is required and is the folder to clone.
 # Optional filters can be set in `match` field using shell globs format, by
 # default, it allows scanning all folders and files. The list of files is print
-# out in debug `loglevel`.
+# out in debug `loglevel`. if `excludedone` is true (by default) when one file
+# is processed by one operation, it will be ignored in other operations (is
+# important the order of the operations).
 process:
   - source: conf/templates
+    excludedone: true
     match:
         folder:
            add: "*"

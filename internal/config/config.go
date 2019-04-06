@@ -21,7 +21,7 @@ type DefaultMode struct {
 
 type Default struct {
 	Mode  DefaultMode `mapstructure:"mode" valid:"required"`
-	Force bool        `mapstructure:"force" valid:"required" default:"true"`
+	Force *bool       `mapstructure:"force" default:"false"`
 }
 
 type Operation struct {
@@ -30,10 +30,10 @@ type Operation struct {
 	Perms           []*Permissions         `mapstructure:"permissions"`
 	Regex           string                 `mapstructure:"regex" default:".*"`
 	Data            map[string]interface{} `mapstructure:"data"`
-	Template        bool                   `mapstructure:"template"`
-	DelExtension    bool                   `mapstructure:"delextension" default:"true"`
+	Template        *bool                  `mapstructure:"template" default:"true"`
+	DelExtension    *bool                  `mapstructure:"delextension" default:"true"`
 	RenderCondition string                 `mapstructure:"condition"`
-	PreDelete       bool                   `mapstructure:"predelete" default:"false"`
+	PreDelete       *bool                  `mapstructure:"predelete" default:"true"`
 	Command         *Runner                `mapstructure:"command" valid:"-"`
 }
 
@@ -50,7 +50,7 @@ type Match struct {
 type Process struct {
 	Source      string       `mapstructure:"source" valid:"required"`
 	Match       Match        `mapstructure:"match" valid:"required"`
-	ExcludeDone bool         `mapstructure:"excludedone" default:"true"`
+	ExcludeDone *bool        `mapstructure:"excludedone" default:"true"`
 	Operations  []*Operation `mapstructure:"operations" valid:"required"`
 }
 

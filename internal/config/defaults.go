@@ -68,7 +68,8 @@ func (c *Config) SetDefault(ptr interface{}) error {
 	}
 	for i := 0; i < t.NumField(); i++ {
 		if defaultVal := t.Field(i).Tag.Get(configDefaultFieldTag); defaultVal != "-" {
-			if err := c.setField(v.Field(i), defaultVal); err != nil {
+			//fmt.Printf("Item: %v: %s\n", t.Field(i).Name, defaultVal)
+			if err := c.setField(v.Field(i), defaultVal, false); err != nil {
 				return err
 			}
 		}
@@ -76,7 +77,88 @@ func (c *Config) SetDefault(ptr interface{}) error {
 	return nil
 }
 
-func (c *Config) setField(field reflect.Value, defaultVal string) error {
+func (c *Config) setBaseTypeField(field reflect.Value, defaultVal string) bool {
+	switch field.Kind() {
+	case reflect.Bool:
+		if val, err := strconv.ParseBool(defaultVal); err == nil {
+			field.Set(reflect.ValueOf(val).Convert(field.Type()))
+		}
+		return true
+	case reflect.Int:
+		if val, err := strconv.ParseInt(defaultVal, 10, 64); err == nil {
+			field.Set(reflect.ValueOf(int(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Int8:
+		if val, err := strconv.ParseInt(defaultVal, 10, 8); err == nil {
+			field.Set(reflect.ValueOf(int8(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Int16:
+		if val, err := strconv.ParseInt(defaultVal, 10, 16); err == nil {
+			field.Set(reflect.ValueOf(int16(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Int32:
+		if val, err := strconv.ParseInt(defaultVal, 10, 32); err == nil {
+			field.Set(reflect.ValueOf(int32(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Int64:
+		if val, err := time.ParseDuration(defaultVal); err == nil {
+			field.Set(reflect.ValueOf(val).Convert(field.Type()))
+		} else if val, err := strconv.ParseInt(defaultVal, 10, 64); err == nil {
+			field.Set(reflect.ValueOf(val).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uint:
+		if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
+			field.Set(reflect.ValueOf(uint(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uint8:
+		if val, err := strconv.ParseUint(defaultVal, 10, 8); err == nil {
+			field.Set(reflect.ValueOf(uint8(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uint16:
+		if val, err := strconv.ParseUint(defaultVal, 10, 16); err == nil {
+			field.Set(reflect.ValueOf(uint16(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uint32:
+		if val, err := strconv.ParseUint(defaultVal, 10, 32); err == nil {
+			field.Set(reflect.ValueOf(uint32(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uint64:
+		if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
+			field.Set(reflect.ValueOf(val).Convert(field.Type()))
+		}
+		return true
+	case reflect.Uintptr:
+		if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
+			field.Set(reflect.ValueOf(uintptr(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Float32:
+		if val, err := strconv.ParseFloat(defaultVal, 32); err == nil {
+			field.Set(reflect.ValueOf(float32(val)).Convert(field.Type()))
+		}
+		return true
+	case reflect.Float64:
+		if val, err := strconv.ParseFloat(defaultVal, 64); err == nil {
+			field.Set(reflect.ValueOf(val).Convert(field.Type()))
+		}
+		return true
+	case reflect.String:
+		field.Set(reflect.ValueOf(defaultVal).Convert(field.Type()))
+		return true
+	}
+	return false
+}
+
+func (c *Config) setField(field reflect.Value, defaultVal string, ptr bool) error {
 	if !field.CanSet() {
 		return nil
 	}
@@ -87,67 +169,10 @@ func (c *Config) setField(field reflect.Value, defaultVal string) error {
 		}
 	}
 	if c.isInitialValue(field) {
+		if !ptr {
+			c.setBaseTypeField(field, defaultVal)
+		}
 		switch field.Kind() {
-		case reflect.Bool:
-			if val, err := strconv.ParseBool(defaultVal); err == nil {
-				field.Set(reflect.ValueOf(val).Convert(field.Type()))
-			}
-		case reflect.Int:
-			if val, err := strconv.ParseInt(defaultVal, 10, 64); err == nil {
-				field.Set(reflect.ValueOf(int(val)).Convert(field.Type()))
-			}
-		case reflect.Int8:
-			if val, err := strconv.ParseInt(defaultVal, 10, 8); err == nil {
-				field.Set(reflect.ValueOf(int8(val)).Convert(field.Type()))
-			}
-		case reflect.Int16:
-			if val, err := strconv.ParseInt(defaultVal, 10, 16); err == nil {
-				field.Set(reflect.ValueOf(int16(val)).Convert(field.Type()))
-			}
-		case reflect.Int32:
-			if val, err := strconv.ParseInt(defaultVal, 10, 32); err == nil {
-				field.Set(reflect.ValueOf(int32(val)).Convert(field.Type()))
-			}
-		case reflect.Int64:
-			if val, err := time.ParseDuration(defaultVal); err == nil {
-				field.Set(reflect.ValueOf(val).Convert(field.Type()))
-			} else if val, err := strconv.ParseInt(defaultVal, 10, 64); err == nil {
-				field.Set(reflect.ValueOf(val).Convert(field.Type()))
-			}
-		case reflect.Uint:
-			if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
-				field.Set(reflect.ValueOf(uint(val)).Convert(field.Type()))
-			}
-		case reflect.Uint8:
-			if val, err := strconv.ParseUint(defaultVal, 10, 8); err == nil {
-				field.Set(reflect.ValueOf(uint8(val)).Convert(field.Type()))
-			}
-		case reflect.Uint16:
-			if val, err := strconv.ParseUint(defaultVal, 10, 16); err == nil {
-				field.Set(reflect.ValueOf(uint16(val)).Convert(field.Type()))
-			}
-		case reflect.Uint32:
-			if val, err := strconv.ParseUint(defaultVal, 10, 32); err == nil {
-				field.Set(reflect.ValueOf(uint32(val)).Convert(field.Type()))
-			}
-		case reflect.Uint64:
-			if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
-				field.Set(reflect.ValueOf(val).Convert(field.Type()))
-			}
-		case reflect.Uintptr:
-			if val, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
-				field.Set(reflect.ValueOf(uintptr(val)).Convert(field.Type()))
-			}
-		case reflect.Float32:
-			if val, err := strconv.ParseFloat(defaultVal, 32); err == nil {
-				field.Set(reflect.ValueOf(float32(val)).Convert(field.Type()))
-			}
-		case reflect.Float64:
-			if val, err := strconv.ParseFloat(defaultVal, 64); err == nil {
-				field.Set(reflect.ValueOf(val).Convert(field.Type()))
-			}
-		case reflect.String:
-			field.Set(reflect.ValueOf(defaultVal).Convert(field.Type()))
 		case reflect.Slice:
 			ref := reflect.New(field.Type())
 			ref.Elem().Set(reflect.MakeSlice(field.Type(), 0, 0))
@@ -176,11 +201,14 @@ func (c *Config) setField(field reflect.Value, defaultVal string) error {
 			field.Set(ref.Elem())
 		case reflect.Ptr:
 			field.Set(reflect.New(field.Type().Elem()))
+			if done := c.setBaseTypeField(field.Elem(), defaultVal); done {
+				return nil
+			}
 		}
 	}
 	switch field.Kind() {
 	case reflect.Ptr:
-		c.setField(field.Elem(), defaultVal)
+		c.setField(field.Elem(), defaultVal, true)
 		c.callSetter(field.Interface())
 	case reflect.Struct:
 		ref := reflect.New(field.Type())
@@ -192,7 +220,7 @@ func (c *Config) setField(field reflect.Value, defaultVal string) error {
 		field.Set(ref.Elem())
 	case reflect.Slice:
 		for j := 0; j < field.Len(); j++ {
-			if err := c.setField(field.Index(j), defaultVal); err != nil {
+			if err := c.setField(field.Index(j), defaultVal, false); err != nil {
 				return err
 			}
 		}

@@ -128,7 +128,7 @@ func (p *Program) operation(f *fs.Fs, c *config.Operation, excludes []string) ([
 	errs := false
 	log := p.Configurator.Logger()
 	a, err := actions.NewActionRouter(c.Regex, c.DestinationPath,
-		c.Default.Force, c.DelExtension, c.Template, c.PreDelete, excludes)
+		*c.Default.Force, *c.DelExtension, *c.Template, *c.PreDelete, excludes)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (p *Program) Process() (int, error) {
 			if err != nil {
 				errs = append(errs, fmt.Errorf("#%d %s: %s", i+1, proc.Source, err))
 			}
-			if proc.ExcludeDone {
+			if *proc.ExcludeDone {
 				processed = append(processed, done...)
 			}
 		}
