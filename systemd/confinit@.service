@@ -1,13 +1,15 @@
 [Unit]
 Description=Manages configuration files from %I
 DefaultDependencies=no
-After=systemd-remount-fs.service
+Requires=local-fs.target
+After=local-fs.target
 Before=cloud-init-local.service
 Before=shutdown.target
 Before=sysinit.target
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/confinit.yml
+# RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
