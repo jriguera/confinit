@@ -1,5 +1,5 @@
 [Unit]
-Description=Confinit files from %I
+Description=Confinit files from /%I
 DefaultDependencies=no
 Requires=local-fs.target
 After=local-fs.target
