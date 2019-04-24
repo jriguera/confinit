@@ -91,7 +91,8 @@ func (p *Runner) run() *Status {
 			p.command.Stop()
 		}()
 	}
-	clock := time.After(time.Duration(100) * time.Millisecond)
+	clock := time.NewTicker(time.Duration(100) * time.Millisecond)
+	defer clock.Stop()
 	running := true
 	for running {
 		console := true
@@ -101,7 +102,7 @@ func (p *Runner) run() *Status {
 				p.print(stdoutLine, false, false)
 			case stderrLine := <-p.command.Stderr:
 				p.print(stderrLine, true, false)
-			case <-clock:
+			case <-clock.C:
 				console = false
 				break
 			}
