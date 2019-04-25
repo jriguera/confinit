@@ -74,6 +74,6 @@ func (fp *Permissions) applyPermissions(dst string) error {
 	return nil
 }
 
-func (fp *Permissions) Function(base string, path string, i os.FileInfo) (err error) {
+func (fp *Permissions) Function(base string, path string, i os.FileMode) (err error) {
 	return fp.applyPermissions(filepath.Join(fp.DstPath, path))
 }

@@ -17,6 +17,7 @@ package actions
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	log "confinit/pkg/log"
@@ -58,15 +59,16 @@ func (a *ActionRouter) condition(data *TemplateData) (bool, string, error) {
 	return true, "", nil
 }
 
-func (a *ActionRouter) Function(base string, path string, i os.FileInfo) (err error) {
-	tpldata := a.NewTemplateData(base, path, i)
-	if _, err = os.Stat(tpldata.Destination); !os.IsNotExist(err) {
+func (a *ActionRouter) Function(base string, path string, i os.FileMode) (err error) {
+	dstpath := filepath.Join(a.DstPath, path)
+	if _, err = os.Stat(dstpath); !os.IsNotExist(err) {
 		if a.PreDelete && !i.IsDir() {
-			if err = os.Remove(tpldata.Destination); err != nil {
+			if err = os.Remove(dstpath); err != nil {
 				return
 			}
 		}
 	}
+	tpldata := a.NewTemplateData(base, path, i)
 	if c, msg, errc := a.condition(tpldata); errc != nil {
 		return errc
 	} else if !c {

@@ -32,15 +32,15 @@ const (
 
 // Process is an interface to define a configurator factory
 type Process interface {
-	Function(base string, path string, i os.FileInfo) error
-	Match(path string, i os.FileInfo) bool
-	AddProcessed(path string, i os.FileInfo)
+	Function(base string, path string, i os.FileMode) error
+	Match(path string, i os.FileMode) bool
+	AddProcessed(path string, i os.FileMode)
 	AddError(path string, err error)
 	Type(t FsItemType) bool
 	ListErrors() []string
 	ListMapErrors() map[string]error
 	ListProcessed() []string
-	ListMapProcessed() map[string]os.FileInfo
+	ListMapProcessed() map[string]os.FileMode
 }
 
 func (fs *Fs) Run(f Process) error {
@@ -83,7 +83,7 @@ type Processor struct {
 	Regex     *regexp.Regexp
 	FsType    FsItemType
 	Exclude   []string
-	Processed map[string]os.FileInfo
+	Processed map[string]os.FileMode
 	Errors    map[string]error
 }
 
@@ -95,7 +95,7 @@ func NewProcessor(regex string, t FsItemType, exclude []string) (*Processor, err
 	}
 	p := Processor{
 		Regex:     pattern,
-		Processed: make(map[string]os.FileInfo),
+		Processed: make(map[string]os.FileMode),
 		Errors:    make(map[string]error),
 		Exclude:   exclude,
 		FsType:    t,
@@ -107,7 +107,7 @@ func (p *Processor) Type(t FsItemType) bool {
 	return p.FsType == t
 }
 
-func (p *Processor) Match(path string, i os.FileInfo) bool {
+func (p *Processor) Match(path string, i os.FileMode) bool {
 	for _, exc := range p.Exclude {
 		if exc == path {
 			return false
@@ -116,7 +116,7 @@ func (p *Processor) Match(path string, i os.FileInfo) bool {
 	return p.Regex.MatchString(path)
 }
 
-func (p *Processor) AddProcessed(path string, i os.FileInfo) {
+func (p *Processor) AddProcessed(path string, i os.FileMode) {
 	p.Processed[path] = i
 }
 
@@ -144,10 +144,10 @@ func (p *Processor) ListMapErrors() map[string]error {
 	return p.Errors
 }
 
-func (p *Processor) ListMapProcessed() map[string]os.FileInfo {
+func (p *Processor) ListMapProcessed() map[string]os.FileMode {
 	return p.Processed
 }
 
-func (p *Processor) Function(base string, path string, i os.FileInfo) error {
+func (p *Processor) Function(base string, path string, i os.FileMode) error {
 	return nil
 }

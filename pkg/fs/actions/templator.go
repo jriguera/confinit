@@ -66,7 +66,6 @@ func (ft *Templator) AddData(data map[string]interface{}) {
 
 type TemplateData struct {
 	IsDir           bool
-	Size            int64
 	Mode            string
 	SourceBaseDir   string
 	Source          string
@@ -83,7 +82,7 @@ type TemplateData struct {
 	Env             map[string]string
 }
 
-func (ft *Templator) NewTemplateData(basedir, f string, i os.FileInfo) *TemplateData {
+func (ft *Templator) NewTemplateData(basedir, f string, i os.FileMode) *TemplateData {
 	dstf := f
 	if ft.SkipExt && !i.IsDir() {
 		dstf = strings.TrimSuffix(f, filepath.Ext(f))
@@ -92,8 +91,7 @@ func (ft *Templator) NewTemplateData(basedir, f string, i os.FileInfo) *Template
 	dstpath := filepath.Join(ft.DstPath, dstf)
 	data := TemplateData{
 		IsDir:           i.IsDir(),
-		Size:            i.Size(),
-		Mode:            i.Mode().String(),
+		Mode:            i.String(),
 		SourceFile:      f,
 		SourceBaseDir:   basedir,
 		Source:          filepath.Base(f),
@@ -147,13 +145,13 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	return nil
 }
 
-func (ft *Templator) Function(base string, path string, i os.FileInfo) (err error) {
+func (ft *Templator) Function(base string, path string, i os.FileMode) (err error) {
 	if i.IsDir() {
 		// Using always default mode (is not replicate)
-		err = ft.mkdir(filepath.Join(ft.DstPath, path), i.Mode())
+		err = ft.mkdir(filepath.Join(ft.DstPath, path), i)
 	} else {
 		tpldata := ft.NewTemplateData(base, path, i)
-		err = ft.renderTemplate(tpldata, os.FileMode(0755), i.Mode())
+		err = ft.renderTemplate(tpldata, os.FileMode(0755), i)
 		if err == nil {
 			err = ft.applyPermissions(tpldata.Destination)
 		}

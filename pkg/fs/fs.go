@@ -20,7 +20,7 @@ import (
 	log "confinit/pkg/log"
 )
 
-type MapFileInfo map[string]os.FileInfo
+type MapFile map[string]os.FileMode
 
 type Fs struct {
 	BasePath     string
@@ -28,8 +28,8 @@ type Fs struct {
 	SkipFileGlob *Glob
 	FileGlob     *Glob
 	DirGlob      *Glob
-	files        MapFileInfo
-	dirs         MapFileInfo
+	files        MapFile
+	dirs         MapFile
 	skippedPaths []string
 	skippedFiles []string
 }
@@ -98,8 +98,8 @@ func New(opts ...Option) *Fs {
 		SkipFileGlob: nil,
 		FileGlob:     fglob,
 		DirGlob:      dglob,
-		files:        make(MapFileInfo),
-		dirs:         make(MapFileInfo),
+		files:        make(MapFile),
+		dirs:         make(MapFile),
 	}
 	// call option functions on instance to set options on it
 	for _, opt := range opts {

@@ -69,7 +69,7 @@ func NewPermissions(glob, uid, gid string, mode os.FileMode, typ FsItemType) (*P
 	return &p, nil
 }
 
-func (fp *Permissions) Function(base string, path string, i os.FileInfo) error {
+func (fp *Permissions) Function(base string, path string, i os.FileMode) error {
 	err := fp.perm.Set(filepath.Join(base, path))
 	if err == nil {
 		log.Debugf("Successfully applied permissions to '%s'", filepath.Join(base, path))

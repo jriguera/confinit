@@ -66,7 +66,7 @@ func (tr *Runner) AddEnv(env map[string]string) {
 	tr.ActionT.SetEnv(tr.Env)
 }
 
-func (tr *Runner) Function(base string, path string, i os.FileInfo) (err error) {
+func (tr *Runner) Function(base string, path string, i os.FileMode) (err error) {
 	tpldata := tr.NewTemplateData(base, path, i)
 	if tr.DstPath != "" {
 		if tr.Render {

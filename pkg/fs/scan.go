@@ -26,8 +26,8 @@ import (
 func (fs *Fs) Scan(p string) error {
 	fs.skippedPaths = nil
 	fs.skippedFiles = nil
-	fs.files = make(MapFileInfo)
-	fs.dirs = make(MapFileInfo)
+	fs.files = make(MapFile)
+	fs.dirs = make(MapFile)
 	fs.BasePath = p
 	return filepath.Walk(fs.BasePath, fs.scan)
 }
@@ -52,7 +52,7 @@ func (fs *Fs) scan(p string, i os.FileInfo, err error) error {
 			return filepath.SkipDir
 		}
 		log.Debugf("Adding folder: %s", p)
-		fs.dirs[relp] = i
+		fs.dirs[relp] = i.Mode()
 	} else if i.Mode().IsRegular() || i.Mode()&os.ModeSymlink != 0 {
 		if fs.SkipFileGlob != nil && fs.SkipFileGlob.MatchString(relp) {
 			fs.skippedFiles = append(fs.skippedFiles, relp)
@@ -64,7 +64,7 @@ func (fs *Fs) scan(p string, i os.FileInfo, err error) error {
 			return nil
 		}
 		log.Debugf("Adding file: %s", p)
-		fs.files[relp] = i
+		fs.files[relp] = i.Mode()
 	} else {
 		log.Debugf("Skipping non regular file: %s", p)
 	}
