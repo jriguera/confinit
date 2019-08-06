@@ -6,6 +6,7 @@ After=local-fs.target
 Before=cloud-init-local.service
 Before=shutdown.target
 Before=sysinit.target
+Before=systemd-sysctl.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/confinit.yml
