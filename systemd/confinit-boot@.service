@@ -7,7 +7,7 @@ Before=shutdown.target
 Before=systemd-sysctl.service systemd-journald.service systemd-modules-load.service systemd-timesyncd.service systemd-udevd.service systemd-sysusers.service 
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
-ConditionPathExists=/%I/confinit.yml
+ConditionPathExists=/%I/confinit-boot.yml
 # RequiresMountsFor=/boot
 
 [Service]
@@ -16,7 +16,7 @@ RemainAfterExit=yes
 StandardOutput=journal
 User=root
 Group=root
-ExecStart=/bin/confinit --config /%I/confinit.yml
+ExecStart=/bin/confinit --config /%I/confinit-boot.yml
 PrivateTmp=yes
 
 [Install]

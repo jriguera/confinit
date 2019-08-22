@@ -8,7 +8,7 @@ After=network.target multi-user.target docker.service cloud-init.target
 Before=docker-compose.target
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
-ConditionPathExists=/%I/confinit.yml
+ConditionPathExists=/%I/confinit-final.yml
 # RequiresMountsFor=/boot
 
 [Service]
@@ -17,7 +17,7 @@ RemainAfterExit=yes
 StandardOutput=journal
 User=root
 Group=root
-ExecStart=/bin/confinit --config /%I/confinit.yml
+ExecStart=/bin/confinit --config /%I/confinit-final.yml
 PrivateTmp=yes
 
 [Install]
