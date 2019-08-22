@@ -1,0 +1,23 @@
+[Unit]
+Description=Confinit boot files from /%I
+DefaultDependencies=no
+Requires=local-fs.target
+After=local-fs.target
+Before=shutdown.target
+Before=systemd-sysctl.service systemd-journald.service systemd-modules-load.service systemd-timesyncd.service systemd-udevd.service systemd-sysusers.service 
+Conflicts=shutdown.target
+ConditionFileIsExecutable=/bin/confinit
+ConditionPathExists=/%I/confinit.yml
+# RequiresMountsFor=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+User=root
+Group=root
+ExecStart=/bin/confinit --config /%I/confinit.yml
+PrivateTmp=yes
+
+[Install]
+WantedBy=sysinit.target
