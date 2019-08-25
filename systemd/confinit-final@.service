@@ -21,4 +21,4 @@ ExecStart=/bin/confinit --config /%I/confinit-final.yml
 PrivateTmp=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target docker-compose.target

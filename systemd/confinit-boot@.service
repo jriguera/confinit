@@ -4,7 +4,10 @@ DefaultDependencies=no
 Requires=local-fs.target
 After=local-fs.target
 Before=shutdown.target
-Before=systemd-sysctl.service systemd-journald.service systemd-modules-load.service systemd-timesyncd.service systemd-udevd.service systemd-sysusers.service 
+Before=cloud-config.target
+Before=sysinit.target
+Before=cloud-init-local.service
+Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/confinit-boot.yml
@@ -20,4 +23,4 @@ ExecStart=/bin/confinit --config /%I/confinit-boot.yml
 PrivateTmp=yes
 
 [Install]
-WantedBy=sysinit.target
+WantedBy=sysinit.target cloud-config.target
