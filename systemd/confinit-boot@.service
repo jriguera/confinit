@@ -10,7 +10,7 @@ Before=cloud-init-local.service
 Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
-ConditionPathExists=/%I/confinit-boot.yml
+ConditionPathExists=/%I/.confinit-boot.yml
 # RequiresMountsFor=/boot
 
 [Service]
@@ -19,7 +19,7 @@ RemainAfterExit=yes
 StandardOutput=journal
 User=root
 Group=root
-ExecStart=/bin/confinit --config /%I/confinit-boot.yml
+ExecStart=/bin/confinit --config /%I/.confinit-boot.yml
 PrivateTmp=yes
 
 [Install]
