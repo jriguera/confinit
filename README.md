@@ -9,6 +9,8 @@ structure.
 Usage
 =====
 
+Complete example: https://github.com/jriguera/raspbian-cloud/tree/master/stage8/99-confinit/config
+
 Given a source folder structure (with files and sub-folders) the primary goal of
 this program is replicate the same structure in a destination folder. The program
 will scan the source folder and apply a list of operations (copy, render, execute)
