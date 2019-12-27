@@ -12,6 +12,7 @@ GITHUB_REPO="jriguera/confinit"
 
 ###
 
+BUILDEB="dpkg-buildpackage -rfakeroot -us -uc"
 MAKE="make"
 JQ="jq"
 CURL="curl -s"
@@ -25,8 +26,15 @@ then
     exit 1
 fi
 
-# You need bosh installed and with you credentials
+# You need make installed
 if ! [ -x "$(command -v $MAKE)" ]
+then
+    echo "ERROR: $MAKE command not found! Please install it and make it available in the PATH"
+    exit 1
+fi
+
+# You need bosh installed and with you credentials
+if ! [ -x "$(command -v $(echo $BUILDEB | cut -d' ' -f 1))" ]
 then
     echo "ERROR: $MAKE command not found! Please install it and make it available in the PATH"
     exit 1
@@ -69,25 +77,7 @@ case $# in
 esac
 
 echo "* Removing old binaries ..."
-make clean-build
-
-# Get the last git commit made by this script
-LASTCOMMIT=$(git show-ref --tags -d | tail -n 1)
-if [ -z "$LASTCOMMIT" ]
-then
-    echo "* Changes since the beginning: "
-    CHANGELOG=$(git log --pretty="%h %aI %s (%an)" | sed 's/^/- /')
-else
-    echo "* Changes since last version with commit $LASTCOMMIT: "
-    CHANGELOG=$(git log --pretty="%h %aI %s (%an)" "$(echo $LASTCOMMIT | cut -d' ' -f 1)..@" | sed 's/^/- /')
-fi
-if [ -z "$CHANGELOG" ]
-then
-    echo "ERROR: no commits since last release with commit $LASTCOMMIT!. Please "
-    echo "commit your changes to create and publish a new release!"
-    exit 1
-fi
-echo "$CHANGELOG"
+$MAKE clean-build
 
 # Creating the release
 if [ -z "$VERSION" ]
@@ -98,9 +88,47 @@ else
     echo "* Creating final release version $VERSION (from env/input)..."
 fi
 
+# Get the last git commit made by this script
+LASTCOMMIT=$(git show-ref --tags -d | tail -n 1 | cut -d' ' -f 1)
+if [ -z "$LASTCOMMIT" ]
+then
+    echo "* Changes since the beginning: "
+    CHANGELOG=$(git log --pretty="- %h %aI %s (%an)")
+    DEBIAN_CHANGELOG=$(cat <<- EOF
+		${RELEASE} (${VERSION}) unstable; urgency=low
+		`echo "$(git log --pretty='  * %s')"`
+		`echo "$(git log --pretty='%n -- %aN <%aE>  %aD%n%n' HEAD^..HEAD)"`
+		EOF
+    )
+else
+    echo "* Changes since last version with commit $LASTCOMMIT: "
+    CHANGELOG=$(git log --pretty="- %h %aI %s (%an)" "${LASTCOMMIT}..@")
+    DEBIAN_CHANGELOG=$(cat <<-EOF
+		${RELEASE} (${VERSION}) unstable; urgency=low
+		`echo "$(git log --pretty='  * %s' ${LASTCOMMIT}..@)"`
+		`echo "$(git log --pretty='%n -- %aN <%aE>  %aD%n%n' ${LASTCOMMIT}^..${LASTCOMMIT})"`
+		EOF
+    )
+fi
+if [ -z "$CHANGELOG" ]
+then
+    echo "ERROR: no commits since last release with commit $LASTCOMMIT!. Please "
+    echo "commit your changes to create and publish a new release!"
+    exit 1
+fi
+echo "$CHANGELOG"
+
 # Make
 echo "* Generating binaries ..."
-make all
+$MAKE build
+
+echo "* Generating debian package ..."
+# Add changelog to debian/changelog
+echo $DEBIAN_CHANGELOG >> debian/changelog
+$MAKE deb
+git add debian/changelog
+git commit -m "updated debian changelog for version $VERSION"
+git push
 
 # Create annotated tag
 echo "* Creating a git tag ... "
@@ -120,7 +148,7 @@ printf -v data '{"tag_name": "v%s","target_commitish": "master","name": "v%s","b
 releaseid=$($CURL -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -XPOST --data "$data" "https://api.github.com/repos/$GITHUB_REPO/releases" | $JQ '.id')
 # Upload the release
 echo "* Uploading binaries to Github releases section ... "
-for release in build/*
+for release in build/* deb/*.deb
 do
     echo -n "  URL: "
     $CURL -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/octet-stream" --data-binary @"${release}" "https://uploads.github.com/repos/$GITHUB_REPO/releases/$releaseid/assets?name=$(basename ${release})" | $JQ -r '.browser_download_url'
