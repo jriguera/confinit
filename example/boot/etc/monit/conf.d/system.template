@@ -1,0 +1,13 @@
+##
+## Check general system resources such as load average, cpu and memory
+## usage. Each test specifies a resource, conditions and the action to be
+## performed should a test fail.
+#
+check system $HOST
+    if loadavg (1min) > {{.Data.system.monit.alerts.system.load1 }} then alert
+    if loadavg (5min) > {{.Data.system.monit.alerts.system.load5 }} then alert
+    if cpu usage > {{.Data.system.monit.alerts.system.cpu }} then alert
+    if memory usage > {{.Data.system.monit.alerts.system.mem }} then alert
+    if swap usage > {{.Data.system.monit.alerts.system.swap }} then alert
+    group system
+

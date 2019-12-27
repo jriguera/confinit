@@ -1,0 +1,101 @@
+##### wpa_supplicant configuration file
+#
+# This file describes configuration file format and lists all available option.
+# Please also take a look at simpler configuration examples in 'examples'
+# subdirectory.
+#
+# Empty lines and lines starting with # are ignored
+
+# NOTE! This file may contain password information and should probably be made
+# readable only by root user on multiuser systems.
+
+# Note: All file paths in this configuration file should use full (absolute,
+# not relative to working directory) path in order to allow working directory
+# to be changed. This can happen if wpa_supplicant is run in the background.
+
+# Whether to allow wpa_supplicant to update (overwrite) configuration
+#
+# This option can be used to allow wpa_supplicant to overwrite configuration
+# file whenever configuration is changed (e.g., new network block is added with
+# wpa_cli or wpa_gui, or a password is changed). This is required for
+# wpa_cli/wpa_gui to be able to store the configuration changes permanently.
+# Please note that overwriting configuration file will remove the comments from
+# it.
+update_config=1
+
+# global configuration (shared by all network blocks)
+#
+# Parameters for the control interface. If this is specified, wpa_supplicant
+# will open a control interface that is available for external programs to
+# manage wpa_supplicant. The meaning of this string depends on which control
+# interface mechanism is used. For all cases, the existence of this parameter
+# in configuration is used to determine whether the control interface is
+# enabled.
+#
+# For UNIX domain sockets (default on Linux and BSD): This is a directory that
+# will be created for UNIX domain sockets for listening to requests from
+# external programs (CLI/GUI, etc.) for status information and configuration.
+# The socket file will be named based on the interface name, so multiple
+# wpa_supplicant processes can be run at the same time if more than one
+# interface is used.
+# /var/run/wpa_supplicant is the recommended directory for sockets and by
+# default, wpa_cli will use it when trying to connect with wpa_supplicant.
+#
+# Access control for the control interface can be configured by setting the
+# directory to allow only members of a group to use sockets. This way, it is
+# possible to run wpa_supplicant as root (since it needs to change network
+# configuration and open raw sockets) and still allow GUI/CLI components to be
+# run as non-root users. However, since the control interface can be used to
+# change the network configuration, this access needs to be protected in many
+# cases. By default, wpa_supplicant is configured to use gid 0 (root). If you
+# want to allow non-root users to use the control interface, add a new group
+# and change this value to match with that group. Add users that should have
+# control interface access to this group. If this variable is commented out or
+# not included in the configuration file, group will not be changed from the
+# value it got by default when the directory or socket was created.
+#
+# When configuring both the directory and group, use following format:
+# DIR=/var/run/wpa_supplicant GROUP=wheel
+# DIR=/var/run/wpa_supplicant GROUP=0
+# (group can be either group name or gid)
+#
+# For UDP connections (default on Windows): The value will be ignored. This
+# variable is just used to select that the control interface is to be created.
+# The value can be set to, e.g., udp (ctrl_interface=udp)
+#
+# For Windows Named Pipe: This value can be used to set the security descriptor
+# for controlling access to the control interface. Security descriptor can be
+# set using Security Descriptor String Format (see http://msdn.microsoft.com/
+# library/default.asp?url=/library/en-us/secauthz/security/
+# security_descriptor_string_format.asp). The descriptor string needs to be
+# prefixed with SDDL=. For example, ctrl_interface=SDDL=D: would set an empty
+# DACL (which will reject all connections). See README-Windows.txt for more
+# information about SDDL string format.
+#
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+
+# Country code
+# The ISO/IEC alpha2 country code for the country in which this device is
+# currently operating.
+country={{ .Data.system.country }}
+
+# Device Name
+# User-friendly description of device; up to 32 octets encoded in UTF-8
+device_name={{ .Data.system.hostname }}
+
+{{ if not .Data.hostapd }}
+# Wifi
+{{ range $iface, $params := .Data.networking }}
+{{ if $params.wlan }}
+network={
+    {{ range $i, $data := $params.wlan }}{{ range $k, $v := $data }}
+    {{ if eq $k "ssid" -}}{{ $k }}="{{ $v -}}"
+    {{ else if eq $k "psk" -}}{{ $k }}="{{ $v -}}"
+    {{ else -}}{{ $k }}={{ $v -}}
+    {{ end -}}
+{{ end }}{{ end }}
+}
+{{ end }}
+{{ end }}
+{{ end }}
+

@@ -1,0 +1,4 @@
+{{ if .Data.mail.relay }}
+table secrets file:/etc/mail/secrets
+accept for any relay via {{.Data.mail.relay.protocol }}://{{.Data.mail.relay.sysuser }}@{{.Data.mail.relay.server }} auth <secrets> {{ if .Data.mail.hostname }} hostname {{.Data.mail.hostname }} {{ end }}
+{{ end }}

@@ -1,0 +1,52 @@
+# Avahi configuration
+#
+# See avahi-daemon.conf(5) for more information on this configuration
+# file!
+
+[server]
+host-name={{ .Data.system.hostname }}
+domain-name={{ .Data.system.domain }}
+use-ipv4=yes
+use-ipv6=no
+{{ if .Data.avahi.iface }}allow-interfaces={{ .Data.avahi.iface }}{{ end }}
+enable-dbus=yes
+disallow-other-stacks=yes
+cache-entries-max=256
+clients-max=256
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+{{ if .Data.avahi.browsedomains }}browse-domains={{ range $i, $domain := .Data.avahi.browsedomains }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
+#check-response-ttl=no
+#use-iff-running=no
+#allow-point-to-point=no
+#objects-per-client-max=1024
+#entries-per-entry-group-max=32
+
+[wide-area]
+enable-wide-area=yes
+
+[publish]
+disable-publishing={{ if .Data.avahi.publish }}no{{ else }}yes{{ end }}
+add-service-cookie=yes
+publish-addresses=yes
+publish-hinfo=yes
+publish-workstation=no
+publish-domain=yes
+#disable-user-service-publishing=no
+{{ if .Data.avahi.publishdns }}publish-dns-servers={{ range $i, $domain := .Data.avahi.publishdns }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
+#publish-resolv-conf-dns-servers=yes
+#publish-aaaa-on-ipv4=yes
+#publish-a-on-ipv6=no
+
+[reflector]
+#enable-reflector=no
+#reflect-ipv=no
+
+[rlimits]
+#rlimit-as=
+rlimit-core=0
+rlimit-data=4194304
+rlimit-fsize=0
+rlimit-nofile=768
+rlimit-stack=4194304
+rlimit-nproc=3

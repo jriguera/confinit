@@ -1,0 +1,16 @@
+## Check filesystem permissions, uid, gid, space and inode usage. Other services,
+## such as databases, may depend on this resource and an automatically graceful
+## stop may be cascaded to them before the filesystem will become full and data
+## lost.
+#
+check filesystem volume-datafs with path /media/volume-data
+    if space usage > {{.Data.system.monit.alerts.fs }} then alert
+    if inode usage > 95% then alert
+    if changed fsflags then alert
+    group system
+    group datafs
+
+check program volume-datafs-status with path "/bin/btrfs-check -m /media/volume-data"
+    if status != 0 then alert
+    group system
+    group datafs

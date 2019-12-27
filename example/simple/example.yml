@@ -1,6 +1,6 @@
 logoutput: split
 loglevel: debug
-datafile: conf/data.yml
+datafile: simple/data.yml
 
 env:
     A: B
@@ -14,9 +14,9 @@ finish:
     cmd: ["pwd"]
 
 process:
-  - source: conf/templates
+  - source: simple/templates
     operations:
-      - destination: /tmp/templates
+      - destination: /tmp/confinit
         regex: '.*\.template'
         template: true
         default:
@@ -29,7 +29,7 @@ process:
             mode: "0600"
             user: jriguera
             group: jriguera
-      - destination: /tmp/temp
+      - destination: /tmp/confinit/exec
         regex: '.*\.sh'
         default:
           mode:

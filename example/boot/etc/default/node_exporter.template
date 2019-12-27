@@ -1,0 +1,9 @@
+# Whether or not to run the node-exporter daemon; set to 0 to disable.
+{{ if .Data.node_exporter }}
+ENABLED=1
+{{ else }}
+ENABLED=0
+{{ end }}
+
+# Prometheus node_exporter options
+OPTIONS="--collector.textfile.directory /var/lib/node_exporter/textfile_collector"

@@ -1,0 +1,12 @@
+# Enter mail aliases below in the format described by aliases(5)
+# RFC 2142 NETWORK OPERATIONS MAILBOX NAMES
+abuse:		root
+noc:		root
+security:	root
+# RFC 2142 SUPPORT MAILBOX NAMES FOR SPECIFIC INTERNET SERVICES
+postmaster:	root
+hostmaster:	root
+monit: 		root
+root: 		{{ .Data.system.user.name }}
+{{ .Data.system.user.name }}:		{{ .Data.system.user.email }}
+

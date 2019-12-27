@@ -1,0 +1,87 @@
+# /etc/dhcpcd.conf - Configuration file for dhcpcd
+# See dhcpcd.conf(5) for details.
+
+# Allow users of this group to interact with dhcpcd via the control socket.
+controlgroup admin
+
+# Inform the DHCP server of our hostname for DDNS.
+hostname
+
+# Use the hardware address of the interface for the Client ID: clientid
+# or use the same DUID + IAID as set in DHCPv6 for DHCPv4 ClientID as per RFC4361: duid
+# Some non-RFC compliant DHCP servers do not reply with this set.
+# In this case, comment out duid and enable clientid above.
+clientid
+
+# Persist interface configuration when dhcpcd exits.
+persistent
+
+# Rapid commit support. Safe to enable by default because it requires the equivalent
+# option set on the server to actually work.
+option rapid_commit
+
+# A list of options to request from the DHCP server.
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+# Most distributions have NTP support.
+option ntp_servers
+# Respect the network MTU. This is applied to DHCP routes.
+option interface_mtu
+
+# A ServerID is required by RFC2131.
+require dhcp_server_identifier
+
+# Generate Stable Private IPv6 Addresses instead of hardware based ones
+slaac private
+
+# Ignore docker interfaces
+denyinterfaces docker* veth* br-*
+
+# Time out after seconds, instead of the default 30
+{{ if .Data.system.dhcptimeout }}
+timeout {{ .Data.system.dhcptimeout }}
+{{ else }}
+timeout 300
+{{ end }}
+
+# Generated configuration
+{{ if .Data.system.forceresolvconf }}nohook resolv.conf {{ end }}
+{{ range $key, $value := .Data.networking }}
+  {{ if $value.profile }}
+    {{ with eq $value.profile "dhcp" }}
+      {{ if $value.fallback }}
+# Static profile
+profile static_{{ $key }}
+static ip_address={{ $value.fallback.ip }}
+{{ if $value.fallback.gw }}static routers={{ $value.fallback.gw }}
+{{ end -}}
+{{ if $value.fallback.dns }}static domain_name_servers={{ range $i, $dns := $value.fallback.dns }}{{if $i}} {{end}}{{ $dns }}{{end}}
+{{ end -}}
+      {{ end }}
+    {{ end }}
+  {{- with eq $value.profile "dhcp" }}
+interface {{ $key }}
+{{ if $value.fallback }}fallback static_{{ $key }}
+{{ end -}}
+  {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ range $key, $value := .Data.networking }}
+  {{ if $value.profile }}
+    {{ if ne $value.profile "dhcp" }}
+interface {{ $key }}
+{{ if $value.nolink }}nolink
+{{ end -}}
+{{ if $value.ip }}static ip_address={{ $value.ip }}
+{{ end -}}
+{{ if $value.gw }}static routers={{ $value.gw }}
+{{ end -}}
+{{ if $value.dns }}static domain_name_servers={{ range $i, $dns := $value.dns }}{{if $i}} {{end}}{{ $dns }}{{end}}
+{{ end -}}
+{{ if $value.forward }}script /etc/hostapd/forwarding-{{ $value.forward }}.sh
+{{ end -}}
+    {{ end }}
+  {{ end }}
+{{ end }}
+

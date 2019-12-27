@@ -1,0 +1,23 @@
+{{ if .Data.hostapd }}
+check process hostapd with pidfile /run/hostapd.pid
+  start program = "/usr/sbin/service hostapd start" with timeout 60 seconds
+  stop program = "/usr/sbin/service hostapd stop"
+  if 3 restarts within 5 cycles then timeout
+  depends on hostapd_bin
+  depends on hostapd_conf
+  group system
+  group hostapd
+
+check file hostapd_bin with path /usr/sbin/hostapd
+  if does not exist then unmonitor
+  include /etc/monit/templates/rootbin
+  group system
+  group hostapd
+
+check file hostapd_conf with path /etc/hostapd/hostapd.conf
+  if does not exist then unmonitor
+  noalert root@localhost
+  group system
+  group hostapd
+{{ end }}
+

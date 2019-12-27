@@ -1,0 +1,63 @@
+# Force a filesystem type. Set up to skip filesystem checks and force a type.
+#FS=btrfs
+
+# Path where snapshots are place in the filesystem. It can be a absolute path
+# (within filesystem tree) or relative path to the filesystem mountpoint.
+SNAPSHOTS_PATH="/media/volume-data/.snapshots/data"
+
+# Number of snapshots before performing a backup. Backups are done when the
+# index of a snapshot is 1 (sufix #1, e.g. a snapshot '18.10.08-1-1539034830#1')
+# 0 disables this feature, all snapshots will be backup.
+SNAPSHOTS_INDEXES={{ .Data.betterclone.snapshots.indexes }}
+
+# How many snapshots should remaing available? Warning, seting this parameter to
+# 0 also causes SNAPSHOTS_INDEXES gets disabled (0).
+SNAPSHOTS_KEEP={{ .Data.betterclone.snapshots.keep }}
+
+# Programs to un before (stat) and after (end) launching a snapshot
+# They should exit with 0 in order to continue. Please wrap the commands with
+# quotes!
+#SNAPSHOTS_HOOK_START="/bin/true"
+#SNAPSHOTS_HOOK_END="/bin/true"
+
+# Tool to perform backups.
+BACKUPS_TOOL=rclone
+
+# Destination of (remote) backups (using BACKUPS_TOOL)
+BACKUPS_DST="{{ .Data.betterclone.backups.rclone.id }}:{{ .Data.betterclone.backups.rclone.destination }}"
+
+# If rclone config is not in the standard location, indicate it here
+RCLONE_CONFIG="/etc/betterclone/rclone.conf"
+
+# Amount of recent backups to keep without applying the removal policy. Useful
+# more than one bakup per day is being done. After this amount of backups,
+# the policy will keep one per day.
+BACKUPS_INITIAL_KEEP={{ .Data.betterclone.backups.keep.initial }}
+
+# Amount of daily backups to keep. For example, to keep one backup per day during
+# a week, set 7, to keep 2 weeks of daily backups, set 14
+BACKUPS_DAILY_KEEP={{ .Data.betterclone.backups.keep.daily }}
+
+# After BACKUPS_DAILY_KEEP, the policy will keep one per week. This defines
+# which day will be kept (0 is Sunday)
+BACKUPS_KEEP_DAY=0
+
+# Amount of weekly bakups to keep. Only one backup per day (day == BACKUPS_KEEP_DAY)
+# is kept after BACKUPS_DAILY_KEEP. How many of these? (4 means, 4 weekly backups,
+# 4 per month)
+BACKUPS_WEEKLY_KEEP={{ .Data.betterclone.backups.keep.weekly }}
+
+# One backup per month will be kept after BACKUPS_WEEKLY_KEEP, how many of these
+# monthly backups should I keep?
+BACKUPS_MONTHLY_KEEP={{ .Data.betterclone.backups.keep.monthly }}
+
+# Programs to un before (stat) and after (end) launching a backup
+# They should exit with 0 in order to continue. Please wrap the commands with
+# quotes!
+#BACKUPS_HOOK_START="/bin/true"
+#BACKUPS_HOOK_END="/bin/true"
+
+# Restore hook scripts
+#RESTORE_HOOK_START
+#RESTORE_HOOK_END
+

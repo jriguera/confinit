@@ -1,0 +1,27 @@
+logoutput: split
+loglevel: debug
+datafile: /boot/config/parameters.yml
+
+process:
+
+- source: /boot/config/local
+  operations:
+  - destination: /usr/local
+    template: false
+    permissions:
+    - mode: "0755"
+      glob: '*/bin/*'
+    - mode: "0755"
+      glob: '*/sbin/*'
+
+- source: /boot/config/scripts/final
+  operations:
+  - destination: /tmp/confinit
+    template: true
+    delextension: false
+    default:
+      mode:
+        file: "0755"
+    command:
+      cmd: ["{{.Destination}}"]
+

@@ -1,0 +1,139 @@
+# Variables used in templates
+# https://gist.github.com/kimus/9315140
+
+system:
+  forceresolvconf: false
+  forceipv4: true
+  dhcptimeout: 360
+  domain: 'local'
+  hostname: raspi
+# dns: [ '1.1.1.1' ]
+  country: ES
+  timezone: 'Europe/Amsterdam'
+  lang: 'en_GB.UTF-8'
+# watchdog: 10s
+  user:
+    name: 'pi'
+    email: 'hola@gmail.com'
+    password: 'raspberry'
+  monit:
+    users:
+      monit: 'admin'
+      guest: 'guest read-only'
+    alerts:
+      fs: '90% for 5 times within 15 cycles'
+      system:
+        load1: 6
+        load5: 4
+        mem: '98% for 10 cycles'
+        cpu: '95% for 10 cycles'
+        swap: '1%'
+      eth0:
+        upload: "100 MB in last hour"
+        download: "100 MB in last hour"
+      wlan0:
+        upload: "100 MB in last hour"
+        download: "100 MB in last hour"
+
+networking:
+  eth0:
+    profile: 'dhcp'
+    fallback:
+       ip: '192.168.1.10/24'
+       gw: '192.168.1.1'
+       dns:
+       - 1.1.1.1
+       - 8.8.8.8
+# wlan0:
+#   profile: 'static'
+#   ip: 10.1.1.1/24
+#   forward: 'eth0'
+#   nolink: true
+
+### condition services
+
+node_exporter: true
+
+sshd: true
+
+## see docker-compose folder for the services
+docker:
+  portainer:
+    apps: https://github.com/jriguera/docker-portainer/raw/master/rpi/apps.json
+  compose:
+    name: system
+    image: "jriguera/dockercompose"
+    env:
+      MYSQL_HOST: 'db.internal'
+      MYSQL_ROOT_PASSWORD: 'root'
+
+avahi:
+  ifaces: eth0
+  publish: true
+  browsedomains: []
+  publishdns:
+  - 8.8.8.8
+
+#bluetooth:
+#  name: "RaspbianCloud Bluez"
+#  discoverable_time: 300
+#  pairable_time: 0
+#  resolving: false
+#  fast_connect: true
+#  reconnect_uuids: []
+
+#betterclone:
+#  snapshots:
+#    indexes: 6
+#    keep: 1
+#  backups:
+#    keep:
+#      initial: 1
+#      daily: 7
+#      weekly: 4
+#      monthly: 6
+#    rclone:
+#      id: GDrive
+#      destination: /backups/raspi/data
+#      conf: |
+#        type = drive
+#        scope = drive
+#        token = {"access_token":"blabla","expiry":"2018-10-28T12:17:43.881785294+01:00"}
+
+#hostapd:
+#  iface: wlan0
+#  ssid: raspiwifi
+#  passphrase: 'hola'
+#  hidden: true
+#  mode: g
+#  channel: 6
+#  hidden: true
+#  wpa_mgmt: 'WPA-PSK'
+#  country: NL
+#  deny: []
+
+#dhcp:
+#  iface: wlan0
+#  range: "10.1.1.10,10.1.1.100"
+#  gw: 10.1.1.1
+#  ntp:
+#  - 10.1.1.1
+#  dns:
+#  - 10.1.1.1
+#  domain: local
+#  leasing: "24h"
+
+#mail:
+#  iface: lo
+#  expire: 7d
+#  alias:
+#    root: 'root@gmail.com'
+#    pi: 'pi@gmail.com'
+#  relay:
+#    server: 'mail.google.com:587'
+#    sysuser: gmail
+#    protocol: 'tls+auth'
+#    auth:
+#      password: blablalbla
+#      user: gmailuser
+

@@ -1,0 +1,8 @@
+# /etc/default/monit
+
+# Set START to yes to start the monit
+START=yes
+
+# Options to pass to monit
+MONIT_OPTS="-l syslog"
+

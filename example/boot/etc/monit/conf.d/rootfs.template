@@ -1,0 +1,11 @@
+## Check filesystem permissions, uid, gid, space and inode usage. Other services,
+## such as databases, may depend on this resource and an automatically graceful
+## stop may be cascaded to them before the filesystem will become full and data
+## lost.
+#
+check filesystem rootfs with path /
+    if space usage > {{.Data.system.monit.alerts.fs }} then alert
+    if inode usage > 95% then alert
+    if changed fsflags then alert
+    group system
+

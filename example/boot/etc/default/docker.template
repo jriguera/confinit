@@ -1,0 +1,11 @@
+# Docker systemd configuration file, enable at startup
+{{ if .Data.docker }}
+ENABLED=1
+{{ else }}
+ENABLED=0
+{{ end }}
+
+# Use DOCKER_OPTS to modify the daemon startup options.
+#DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4"
+DOCKER_OPTS="--dns 127.0.0.1 --dns 1.1.1.1"
+

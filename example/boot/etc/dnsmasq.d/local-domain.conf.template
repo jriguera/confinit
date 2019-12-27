@@ -1,0 +1,6 @@
+# Add local-only domains here, queries in these domains are answered
+# from /etc/hosts or DHCP only.
+{{ if .Data.system.domain }}
+local=/{{.Data.system.domain }}/
+domain={{.Data.system.domain }}
+{{ end }}

@@ -1,0 +1,55 @@
+{{ if .Data.dhcp }}
+# Host AP
+
+# Log lots of extra information about DHCP transactions.
+log-dhcp
+
+# The unqualified name is no longer put in the DNS, only the qualified name.
+dhcp-fqdn
+
+# Should be set when dnsmasq is definitely the only DHCP server on a network
+dhcp-authoritative
+
+# Dnsmasq is designed to choose IP addresses for DHCP clients using a hash 
+# of the client's MAC address.
+dhcp-sequential-ip
+
+{{ $key := .Data.dhcp.iface }}
+# Integrated DHCP server, you need to supply the range of addresses available 
+# for lease and optionally a lease time. If you have more than one network, 
+# you will need to repeat this for each network on which you want to supply DHCP
+# service.
+dhcp-range=set:{{ $key }},{{ .Data.dhcp.range }},{{ if .Data.dhcp.leasing }}{{ .Data.dhcp.leasing }}{{ else }}24h{{ end }}
+
+{{ if .Data.dhcp.gw }}
+# Set default gateway
+dhcp-option=tag:{{ $key }},option:router,{{ .Data.dhcp.gw }}
+{{ end }}
+
+{{ if .Data.dhcp.dns }}
+# Set DNS servers to announce
+{{ range $i, $v := .Data.dhcp.dns }}dhcp-option=tag:{{ $key }},option:dns-server,{{ $v }}
+{{ end }}
+{{ end }}
+
+{{ if .Data.dhcp.ntp }}
+# Set NTP server
+{{ range $i, $v := .Data.dhcp.ntp }}dhcp-option=tag:{{ $key }},option:ntp-server,{{ $v }}
+{{ end }}
+{{ end }}
+
+{{ if .Data.dhcp.domain }}
+# Set default domain
+dhcp-option=tag:{{ $key }},option:domain-name,{{ .Data.dhcp.domain }}
+{{ else }}
+{{ if .Data.system.domain }}
+# Set default domain
+dhcp-option=tag:{{ $key }},option:domain-name,{{ .Data.system.domain }}
+{{ end }}
+{{ end }}
+
+# (IPv4 only) Generate a name for DHCP clients which do not otherwise have one, 
+# using the MAC address expressed in hex, separated by dashes. 
+dhcp-generate-names=tag:{{ $key }}
+{{ end }}
+

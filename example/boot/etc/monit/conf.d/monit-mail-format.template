@@ -1,0 +1,22 @@
+## Monit by default uses the following format for alerts if the the mail-format
+## statement is missing::
+## --8<--
+## set mail-format {
+##   from:    Monit <monit@$HOST>
+##   subject: monit alert --  $EVENT $SERVICE
+##   message: $EVENT Service $SERVICE
+##                 Date:        $DATE
+##                 Action:      $ACTION
+##                 Host:        $HOST
+##                 Description: $DESCRIPTION
+##
+##            Your faithful employee,
+##            Monit
+## }
+## --8<--
+##
+## You can override this message format or parts of it, such as subject
+## or sender using the MAIL-FORMAT statement. Macros such as $DATE, etc.
+## are expanded at runtime. For example, to override the sender, use:
+# 
+# set mail-format { from: monit@raspberrypi.local }

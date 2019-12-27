@@ -1,0 +1,12 @@
+# Whether or not to run the dnsmasq daemon; set to 0 to disable.
+ENABLED=1
+
+# Options
+#DNSMASQ_OPTS="--conf-file=/etc/dnsmasq.alt"
+
+# By default search this drop directory for configuration options.
+# Libvirt leaves a file here to make the system dnsmasq play nice.
+# Comment out this line if you don't want this. The dpkg-* are file
+# endings which cause dnsmasq to skip that file. This avoids pulling
+# in backups made by dpkg.
+CONFIG_DIR=/etc/dnsmasq.d,*.conf

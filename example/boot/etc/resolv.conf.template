@@ -1,0 +1,14 @@
+# /etc/resolv.conf from boot/confinit/etc
+# See resolv.conf(5) file for glibc resolver(3)
+
+{{range .Data.system.dns }}
+nameserver {{.}}
+{{ else }}
+nameserver 127.0.0.1
+{{ end }}
+
+{{ if .Data.system.domain }}
+search {{ .Data.system.domain }}
+domain {{ .Data.system.domain }}
+{{ end }}
+

@@ -1,0 +1,519 @@
+# Log Levels
+#  0 = verbose debugging
+#  1 = debugging
+#  2 = informational messages
+#  3 = notification
+#  4 = warning
+logger_syslog=-1
+logger_syslog_level=2
+logger_stdout=-1
+logger_stdout_level=2
+
+# Interface for separate control program. If this is specified, hostapd
+# will create this directory and a UNIX domain socket for listening to requests
+# from external programs (CLI/GUI, etc.)
+ctrl_interface=/var/run/hostapd
+
+# Access control for the control interface can be configured by setting the
+# directory to allow only members of a group to use sockets. 
+# This variable can be a group name or gid.
+# ctrl_interface_group=0
+ctrl_interface_group=admin
+
+
+{{ $iface := "" }}
+{{ if .Data.hostapd }}{{ $iface = .Data.hostapd.iface }}{{ end }}
+# AP netdevice name (without 'ap' postfix, i.e., wlan0 uses wlan0ap for
+# management frames with the Host AP driver); wlan0 with many nl80211 drivers
+# Note: This attribute can be overridden by the values supplied with the '-i'
+# command line parameter.
+interface={{ $iface }}
+
+# Driver interface type (hostap/wired/none/nl80211/bsd);
+# default: hostap). nl80211 is used with all Linux mac80211 drivers.
+# Use driver=none if building hostapd as a standalone RADIUS server that does
+# not control any wireless/wired driver.
+# Use the nl80211 driver with the brcmfmac driver
+driver=nl80211
+
+# Operation mode (a = IEEE 802.11a (5 GHz), b = IEEE 802.11b (2.4 GHz),
+# g = IEEE 802.11g (2.4 GHz), ad = IEEE 802.11ad (60 GHz); a/g options are used
+# with IEEE 802.11n (HT), too, to specify band). For IEEE 802.11ac (VHT), this
+# needs to be set to hw_mode=a. When using ACS (see channel parameter), a
+# special value "any" can be used to indicate that any support band can be used.
+# This special case is currently supported only with drivers with which
+# offloaded ACS is used.
+# Default: IEEE 802.11b
+{{ if .Data.hostapd.mode }}hw_mode={{ .Data.hostapd.mode }}{{ else }}hw_mode=g{{ end }}
+
+# Channel number (IEEE 802.11)
+# (default: 0, i.e., not set)
+# Please note that some drivers do not use this value from hostapd and the
+# channel will need to be configured separately with iwconfig.
+#
+# If CONFIG_ACS build option is enabled, the channel can be selected
+# automatically at run time by setting channel=acs_survey or channel=0, both of
+# which will enable the ACS survey based algorithm.
+{{ if .Data.hostapd.channel }}channel={{.Data.hostapd.channel }}{{ else }}channel=6{{ end }}
+
+# ACS tuning - Automatic Channel Selection
+# See: http://wireless.kernel.org/en/users/Documentation/acs
+#
+# You can customize the ACS survey algorithm with following variables:
+#
+# acs_num_scans requirement is 1..100 - number of scans to be performed that
+# are used to trigger survey data gathering of an underlying device driver.
+# Scans are passive and typically take a little over 100ms (depending on the
+# driver) on each available channel for given hw_mode. Increasing this value
+# means sacrificing startup time and gathering more data wrt channel
+# interference that may help choosing a better channel. This can also help fine
+# tune the ACS scan time in case a driver has different scan dwell times.
+#
+# acs_chan_bias is a space-separated list of <channel>:<bias> pairs. It can be
+# used to increase (or decrease) the likelihood of a specific channel to be
+# selected by the ACS algorithm. The total interference factor for each channel
+# gets multiplied by the specified bias value before finding the channel with
+# the lowest value. In other words, values between 0.0 and 1.0 can be used to
+# make a channel more likely to be picked while values larger than 1.0 make the
+# specified channel less likely to be picked. This can be used, e.g., to prefer
+# the commonly used 2.4 GHz band channels 1, 6, and 11 (which is the default
+# behavior on 2.4 GHz band if no acs_chan_bias parameter is specified).
+#
+# Defaults:
+acs_num_scans=30
+acs_chan_bias=1:0.8 6:0.8 11:0.8
+
+# Channel list restriction. This option allows hostapd to select one of the
+# provided channels when a channel should be automatically selected.
+# Channel list can be provided as range using hyphen ('-') or individual
+# channels can be specified by space (' ') separated values
+# Default: all channels allowed in selected hw_mode
+#chanlist=100 104 108 112 116
+#chanlist=1 6 11-13
+
+# Station MAC address -based authentication
+# Please note that this kind of access control requires a driver that uses
+# hostapd to take care of management frame processing and as such, this can be
+# used with driver=hostap or driver=nl80211, but not with driver=atheros.
+# 0 = accept unless in deny list
+# 1 = deny unless in accept list
+# 2 = use external RADIUS server (accept/deny lists are searched first)
+macaddr_acl=0
+
+# Accept/deny lists are read from separate files (containing list of
+# MAC addresses, one per line). Use absolute path name to make sure that the
+# files can be read on SIGHUP configuration reloads.
+#accept_mac_file=/etc/hostapd/accept.mac
+deny_mac_file=/etc/hostapd/deny.mac
+
+# IEEE 802.11 specifies two authentication algorithms. hostapd can be
+# configured to allow both of these or only one. Open system authentication
+# should be used with IEEE 802.1X.
+# Bit fields of allowed authentication algorithms:
+# bit 0 = Open System Authentication
+# bit 1 = Shared Key Authentication (requires WEP)
+auth_algs=1
+
+# Send empty SSID in beacons and ignore probe request frames that do not
+# specify full SSID, i.e., require stations to know SSID.
+# default: disabled (0)
+# 1 = send empty (length=0) SSID in beacon and ignore probe request for
+#     broadcast SSID
+# 2 = clear SSID (ASCII 0), but keep the original length (this may be required
+#     with some clients that do not support empty SSID) and ignore probe
+#     requests for broadcast SSID
+# Hidden SSID == 1
+{{ if .Data.hostapd.hidden }}ignore_broadcast_ssid=1{{ else }}ignore_broadcast_ssid=0{{ end }}
+
+# Do not reply to broadcast Probe Request frames from unassociated STA if there
+# is no room for additional stations (max_num_sta). This can be used to
+# discourage a STA from trying to associate with this AP if the association
+# would be rejected due to maximum STA limit.
+# Default: 0 (disabled)
+#no_probe_resp_if_max_sta=0
+
+# TX queue parameters (EDCF / bursting)
+# tx_queue_<queue name>_<param>
+# queues: data0, data1, data2, data3 (data0 is the highest priority queue)
+# parameters:
+#   aifs: AIFS (default 2)
+#   cwmin: cwMin (1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191,
+#   16383, 32767)
+#   cwmax: cwMax (same values as cwMin, cwMax >= cwMin)
+#   burst: maximum length (in milliseconds with precision of up to 0.1 ms) for
+#          bursting
+#
+# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+# These parameters are used by the access point when transmitting frames
+# to the clients.
+#
+# Low priority / AC_BK = background
+#tx_queue_data3_aifs=7
+#tx_queue_data3_cwmin=15
+#tx_queue_data3_cwmax=1023
+#tx_queue_data3_burst=0
+# Note: for IEEE 802.11b mode: cWmin=31 cWmax=1023 burst=0
+#
+# Normal priority / AC_BE = best effort
+#tx_queue_data2_aifs=3
+#tx_queue_data2_cwmin=15
+#tx_queue_data2_cwmax=63
+#tx_queue_data2_burst=0
+# Note: for IEEE 802.11b mode: cWmin=31 cWmax=127 burst=0
+#
+# High priority / AC_VI = video
+#tx_queue_data1_aifs=1
+#tx_queue_data1_cwmin=7
+#tx_queue_data1_cwmax=15
+#tx_queue_data1_burst=3.0
+# Note: for IEEE 802.11b mode: cWmin=15 cWmax=31 burst=6.0
+#
+# Highest priority / AC_VO = voice
+#tx_queue_data0_aifs=1
+#tx_queue_data0_cwmin=3
+#tx_queue_data0_cwmax=7
+#tx_queue_data0_burst=1.5
+# Note: for IEEE 802.11b mode: cWmin=7 cWmax=15 burst=3.3
+
+# 802.1D Tag (= UP) to AC mappings
+# WMM specifies following mapping of data frames to different ACs. This mapping
+# can be configured using Linux QoS/tc and sch_pktpri.o module.
+# 802.1D Tag	802.1D Designation	Access Category	WMM Designation
+# 1		BK			AC_BK		Background
+# 2		-			AC_BK		Background
+# 0		BE			AC_BE		Best Effort
+# 3		EE			AC_BE		Best Effort
+# 4		CL			AC_VI		Video
+# 5		VI			AC_VI		Video
+# 6		VO			AC_VO		Voice
+# 7		NC			AC_VO		Voice
+# Data frames with no priority information: AC_BE
+# Management frames: AC_VO
+# PS-Poll frames: AC_BE
+
+# Default WMM parameters (IEEE 802.11 draft; 11-03-0504-03-000e):
+# for 802.11a or 802.11g networks
+# These parameters are sent to WMM clients when they associate.
+# The parameters will be used by WMM clients for frames transmitted to the
+# access point.
+#
+# note - txop_limit is in units of 32microseconds
+# note - acm is admission control mandatory flag. 0 = admission control not
+# required, 1 = mandatory
+# note - Here cwMin and cmMax are in exponent form. The actual cw value used
+# will be (2^n)-1 where n is the value given here. The allowed range for these
+# wmm_ac_??_{cwmin,cwmax} is 0..15 with cwmax >= cwmin.
+wmm_enabled=1
+
+
+# Station inactivity limit
+#
+# If a station does not send anything in ap_max_inactivity seconds, an
+# empty data frame is sent to it in order to verify whether it is
+# still in range. If this frame is not ACKed, the station will be
+# disassociated and then deauthenticated. This feature is used to
+# clear station table of old entries when the STAs move out of the
+# range.
+#
+# The station can associate again with the AP if it is still in range;
+# this inactivity poll is just used as a nicer way of verifying
+# inactivity; i.e., client will not report broken connection because
+# disassociation frame is not sent immediately without first polling
+# the STA with a data frame.
+# default: 300 (i.e., 5 minutes)
+#ap_max_inactivity=300
+#
+# The inactivity polling can be disabled to disconnect stations based on
+# inactivity timeout so that idle stations are more likely to be disconnected
+# even if they are still in range of the AP. This can be done by setting
+# skip_inactivity_poll to 1 (default 0).
+#skip_inactivity_poll=0
+
+# Disassociate stations based on excessive transmission failures or other
+# indications of connection loss. This depends on the driver capabilities and
+# may not be available with all drivers.
+#disassoc_low_ack=1
+
+# Maximum number of stations allowed in station table. New stations will be
+# rejected after the station table is full. IEEE 802.11 has a limit of 2007
+# different association IDs, so this number should not be larger than that.
+# (default: 2007)
+max_num_sta=10
+
+
+##### WPA/IEEE 802.11i configuration ##########################################
+
+# Enable WPA. Setting this variable configures the AP to require WPA (either
+# WPA-PSK or WPA-RADIUS/EAP based on other configuration). For WPA-PSK, either
+# wpa_psk or wpa_passphrase must be set and wpa_key_mgmt must include WPA-PSK.
+# Instead of wpa_psk / wpa_passphrase, wpa_psk_radius might suffice.
+# For WPA-RADIUS/EAP, ieee8021x must be set (but without dynamic WEP keys),
+# RADIUS authentication server must be configured, and WPA-EAP must be included
+# in wpa_key_mgmt.
+# This field is a bit field that can be used to enable WPA (IEEE 802.11i/D3.0)
+# and/or WPA2 (full IEEE 802.11i/RSN):
+# bit0 = WPA
+# bit1 = IEEE 802.11i/RSN (WPA2) (dot11RSNAEnabled)
+# Note that WPA3 is also configured with bit1 since it uses RSN just like WPA2.
+# In other words, for WPA3, wpa=2 is used the configuration (and
+# wpa_key_mgmt=SAE for WPA3-Personal instead of wpa_key_mgmt=WPA-PSK).
+wpa=2
+
+# WPA pre-shared keys for WPA-PSK. This can be either entered as a 256-bit
+# secret in hex format (64 hex digits), wpa_psk, or as an ASCII passphrase
+# (8..63 characters) that will be converted to PSK. This conversion uses SSID
+# so the PSK changes when ASCII passphrase is used and the SSID is changed.
+# wpa_psk (dot11RSNAConfigPSKValue)
+# wpa_passphrase (dot11RSNAConfigPSKPassPhrase)
+#wpa_psk=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+{{ if .Data.hostapd.passphrase }}wpa_passphrase={{ .Data.hostapd.passphrase }}{{ else }}wpa_passphrase={{.Data.system.hostname }}{{ end }}
+
+# Optionally, WPA PSKs can be read from a separate text file (containing list
+# of (PSK,MAC address) pairs. This allows more than one PSK to be configured.
+# Use absolute path name to make sure that the files can be read on SIGHUP
+# configuration reloads.
+#wpa_psk_file=/etc/hostapd.wpa_psk
+
+# Set of accepted key management algorithms (WPA-PSK, WPA-EAP, or both). The
+# entries are separated with a space. WPA-PSK-SHA256 and WPA-EAP-SHA256 can be
+# added to enable SHA256-based stronger algorithms.
+# WPA-PSK = WPA-Personal / WPA2-Personal
+# WPA-PSK-SHA256 = WPA2-Personal using SHA256
+# WPA-EAP = WPA-Enterprise / WPA2-Enterprise
+# WPA-EAP-SHA256 = WPA2-Enterprise using SHA256
+# SAE = SAE (WPA3-Personal)
+# WPA-EAP-SUITE-B-192 = WPA3-Enterprise with 192-bit security/CNSA suite
+# FT-PSK = FT with passphrase/PSK
+# FT-EAP = FT with EAP
+# FT-EAP-SHA384 = FT with EAP using SHA384
+# FT-SAE = FT with SAE
+# FILS-SHA256 = Fast Initial Link Setup with SHA256
+# FILS-SHA384 = Fast Initial Link Setup with SHA384
+# FT-FILS-SHA256 = FT and Fast Initial Link Setup with SHA256
+# FT-FILS-SHA384 = FT and Fast Initial Link Setup with SHA384
+# OWE = Opportunistic Wireless Encryption (a.k.a. Enhanced Open)
+# DPP = Device Provisioning Protocol
+# OSEN = Hotspot 2.0 online signup with encryption
+# (dot11RSNAConfigAuthenticationSuitesTable)
+{{ if .Data.hostapd.wpa_mgmt }}wpa_key_mgmt={{ .Data.hostapd.wpa_mgmt }}{{ else }}wpa_key_mgmt=WPA-PSK{{ end }}
+
+# Set of accepted cipher suites (encryption algorithms) for pairwise keys
+# (unicast packets). This is a space separated list of algorithms:
+# CCMP = AES in Counter mode with CBC-MAC (CCMP-128)
+# TKIP = Temporal Key Integrity Protocol
+# CCMP-256 = AES in Counter mode with CBC-MAC with 256-bit key
+# GCMP = Galois/counter mode protocol (GCMP-128)
+# GCMP-256 = Galois/counter mode protocol with 256-bit key
+# Group cipher suite (encryption algorithm for broadcast and multicast frames)
+# is automatically selected based on this configuration. If only CCMP is
+# allowed as the pairwise cipher, group cipher will also be CCMP. Otherwise,
+# TKIP will be used as the group cipher. The optional group_cipher parameter can
+# be used to override this automatic selection.
+#
+# (dot11RSNAConfigPairwiseCiphersTable)
+# Pairwise cipher for WPA (v1) (default: TKIP)
+# wpa_pairwise=TKIP CCMP
+# Pairwise cipher for RSN/WPA2 (default: use wpa_pairwise value)
+# Use AES, instead of TKIP
+rsn_pairwise=CCMP
+
+# Optional override for automatic group cipher selection
+# This can be used to select a specific group cipher regardless of which
+# pairwise ciphers were enabled for WPA and RSN. It should be noted that
+# overriding the group cipher with an unexpected value can result in
+# interoperability issues and in general, this parameter is mainly used for
+# testing purposes.
+#group_cipher=CCMP
+
+# Time interval for rekeying GTK (broadcast/multicast encryption keys) in
+# seconds. (dot11RSNAConfigGroupRekeyTime)
+# This defaults to 86400 seconds (once per day) when using CCMP/GCMP as the
+# group cipher and 600 seconds (once per 10 minutes) when using TKIP as the
+# group cipher.
+#wpa_group_rekey=86400
+
+# Rekey GTK when any STA that possesses the current GTK is leaving the BSS.
+# (dot11RSNAConfigGroupRekeyStrict)
+#wpa_strict_rekey=1
+
+# The number of times EAPOL-Key Message 1/2 in the RSN Group Key Handshake is
+#retried per GTK Handshake attempt. (dot11RSNAConfigGroupUpdateCount)
+# This value should only be increased when stations are constantly
+# deauthenticated during GTK rekeying with the log message
+# "group key handshake failed...".
+# You should consider to also increase wpa_pairwise_update_count then.
+# Range 1..4294967295; default: 4
+#wpa_group_update_count=4
+
+# Time interval for rekeying GMK (master key used internally to generate GTKs
+# (in seconds).
+#wpa_gmk_rekey=86400
+
+# Maximum lifetime for PTK in seconds. This can be used to enforce rekeying of
+# PTK to mitigate some attacks against TKIP deficiencies.
+#wpa_ptk_rekey=600
+
+# The number of times EAPOL-Key Message 1/4 and Message 3/4 in the RSN 4-Way
+# Handshake are retried per 4-Way Handshake attempt.
+# (dot11RSNAConfigPairwiseUpdateCount)
+# Range 1..4294967295; default: 4
+#wpa_pairwise_update_count=4
+
+# Workaround for key reinstallation attacks
+#
+# This parameter can be used to disable retransmission of EAPOL-Key frames that
+# are used to install keys (EAPOL-Key message 3/4 and group message 1/2). This
+# is similar to setting wpa_group_update_count=1 and
+# wpa_pairwise_update_count=1, but with no impact to message 1/4 and with
+# extended timeout on the response to avoid causing issues with stations that
+# may use aggressive power saving have very long time in replying to the
+# EAPOL-Key messages.
+#
+# This option can be used to work around key reinstallation attacks on the
+# station (supplicant) side in cases those station devices cannot be updated
+# for some reason. By removing the retransmissions the attacker cannot cause
+# key reinstallation with a delayed frame transmission. This is related to the
+# station side vulnerabilities CVE-2017-13077, CVE-2017-13078, CVE-2017-13079,
+# CVE-2017-13080, and CVE-2017-13081.
+#
+# This workaround might cause interoperability issues and reduced robustness of
+# key negotiation especially in environments with heavy traffic load due to the
+# number of attempts to perform the key exchange is reduced significantly. As
+# such, this workaround is disabled by default (unless overridden in build
+# configuration). To enable this, set the parameter to 1.
+#wpa_disable_eapol_key_retries=1
+
+# Enable IEEE 802.11i/RSN/WPA2 pre-authentication. This is used to speed up
+# roaming be pre-authenticating IEEE 802.1X/EAP part of the full RSN
+# authentication and key handshake before actually associating with a new AP.
+# (dot11RSNAPreauthenticationEnabled)
+#rsn_preauth=1
+#
+# Space separated list of interfaces from which pre-authentication frames are
+# accepted (e.g., 'eth0' or 'eth0 wlan0wds0'. This list should include all
+# interface that are used for connections to other APs. This could include
+# wired interfaces and WDS links. The normal wireless data interface towards
+# associated stations (e.g., wlan0) should not be added, since
+# pre-authentication is only used with APs other than the currently associated
+# one.
+#rsn_preauth_interfaces=eth0
+
+# ieee80211w: Whether management frame protection (MFP) is enabled
+# 0 = disabled (default)
+# 1 = optional
+# 2 = required
+#ieee80211w=0
+
+# Group management cipher suite
+# Default: AES-128-CMAC (BIP)
+# Other options (depending on driver support):
+# BIP-GMAC-128
+# BIP-GMAC-256
+# BIP-CMAC-256
+# Note: All the stations connecting to the BSS will also need to support the
+# selected cipher. The default AES-128-CMAC is the only option that is commonly
+# available in deployed devices.
+#group_mgmt_cipher=AES-128-CMAC
+
+# Association SA Query maximum timeout (in TU = 1.024 ms; for MFP)
+# (maximum time to wait for a SA Query response)
+# dot11AssociationSAQueryMaximumTimeout, 1...4294967295
+#assoc_sa_query_max_timeout=1000
+
+# Association SA Query retry timeout (in TU = 1.024 ms; for MFP)
+# (time between two subsequent SA Query requests)
+# dot11AssociationSAQueryRetryTimeout, 1...4294967295
+#assoc_sa_query_retry_timeout=201
+
+# disable_pmksa_caching: Disable PMKSA caching
+# This parameter can be used to disable caching of PMKSA created through EAP
+# authentication. RSN preauthentication may still end up using PMKSA caching if
+# it is enabled (rsn_preauth=1).
+# 0 = PMKSA caching enabled (default)
+# 1 = PMKSA caching disabled
+#disable_pmksa_caching=0
+
+# okc: Opportunistic Key Caching (aka Proactive Key Caching)
+# Allow PMK cache to be shared opportunistically among configured interfaces
+# and BSSes (i.e., all configurations within a single hostapd process).
+# 0 = disabled (default)
+# 1 = enabled
+#okc=1
+
+##### IEEE 802.11 related configuration #######################################
+
+# SSID to be used in IEEE 802.11 management frames
+{{ if .Data.hostapd.ssid }}ssid={{ .Data.hostapd.ssid }}{{ else }}ssid={{.Data.system.hostname }}{{ end }}
+
+# Alternative formats for configuring SSID
+# (double quoted string, hexdump, printf-escaped string)
+#ssid2="test"
+#ssid2=74657374
+#ssid2=P"hello\nthere"
+
+# UTF-8 SSID: Whether the SSID is to be interpreted using UTF-8 encoding
+utf8_ssid=1
+
+# Country code (ISO/IEC 3166-1). Used to set regulatory domain.
+# Set as needed to indicate country in which device is operating.
+# This can limit available channels and transmit power.
+# These two octets are used as the first two octets of the Country String
+# (dot11CountryString)
+{{ if .Data.hostapd.country }}country_code={{.Data.hostapd.country }}{{ else }}{{ if .Data.system.country }}country_code={{.Data.system.country }}{{ end }}{{ end }}
+
+
+##### IEEE 802.11n related configuration ######################################
+
+# ieee80211n: Whether IEEE 802.11n (HT) is enabled
+# 0 = disabled (default)
+# 1 = enabled
+# Note: You will also need to enable WMM for full HT functionality.
+# Note: hw_mode=g (2.4 GHz) and hw_mode=a (5 GHz) is used to specify the band.
+ieee80211n=1
+
+# ht_capab: HT capabilities (list of flags)
+# LDPC coding capability: [LDPC] = supported
+# Supported channel width set: [HT40-] = both 20 MHz and 40 MHz with secondary
+#	channel below the primary channel; [HT40+] = both 20 MHz and 40 MHz
+#	with secondary channel above the primary channel
+#	(20 MHz only if neither is set)
+#	Note: There are limits on which channels can be used with HT40- and
+#	HT40+. Following table shows the channels that may be available for
+#	HT40- and HT40+ use per IEEE 802.11n Annex J:
+#	freq		HT40-		HT40+
+#	2.4 GHz		5-13		1-7 (1-9 in Europe/Japan)
+#	5 GHz		40,48,56,64	36,44,52,60
+#	(depending on the location, not all of these channels may be available
+#	for use)
+#	Please note that 40 MHz channels may switch their primary and secondary
+#	channels if needed or creation of 40 MHz channel maybe rejected based
+#	on overlapping BSSes. These changes are done automatically when hostapd
+#	is setting up the 40 MHz channel.
+# Spatial Multiplexing (SM) Power Save: [SMPS-STATIC] or [SMPS-DYNAMIC]
+#	(SMPS disabled if neither is set)
+# HT-greenfield: [GF] (disabled if not set)
+# Short GI for 20 MHz: [SHORT-GI-20] (disabled if not set)
+# Short GI for 40 MHz: [SHORT-GI-40] (disabled if not set)
+# Tx STBC: [TX-STBC] (disabled if not set)
+# Rx STBC: [RX-STBC1] (one spatial stream), [RX-STBC12] (one or two spatial
+#	streams), or [RX-STBC123] (one, two, or three spatial streams); Rx STBC
+#	disabled if none of these set
+# HT-delayed Block Ack: [DELAYED-BA] (disabled if not set)
+# Maximum A-MSDU length: [MAX-AMSDU-7935] for 7935 octets (3839 octets if not
+#	set)
+# DSSS/CCK Mode in 40 MHz: [DSSS_CCK-40] = allowed (not allowed if not set)
+# 40 MHz intolerant [40-INTOLERANT] (not advertised if not set)
+# L-SIG TXOP protection support: [LSIG-TXOP-PROT] (disabled if not set)
+#ht_capab=[HT40-][SHORT-GI-20][SHORT-GI-40]
+ht_capab=[HT40+][SHORT-GI-20][DSSS_CCK-40]
+
+# Require stations to support HT PHY (reject association if they do not)
+#require_ht=1
+
+# If set non-zero, require stations to perform scans of overlapping
+# channels to test for stations which would be affected by 40 MHz traffic.
+# This parameter sets the interval in seconds between these scans. Setting this
+# to non-zero allows 2.4 GHz band AP to move dynamically to a 40 MHz channel if
+# no co-existence issues with neighboring devices are found.
+#obss_interval=0
+

@@ -1,0 +1,8 @@
+## Set global SSL options (just most common options showed, see manual for
+## full list).
+#
+# set ssl {
+#     verify     : enable, # verify SSL certificates (disabled by default but STRONGLY RECOMMENDED)
+#     selfsigned : allow   # allow self signed SSL certificates (reject by default)
+# }
+
