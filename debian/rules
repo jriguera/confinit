@@ -1,0 +1,53 @@
+#!/usr/bin/make -f
+
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+# Golang package defined in control XS-Go-Import-Path
+#export DH_GOPKG := confinit/cmd/confinit
+export GOCACHE = /tmp/go-build
+export GO111MODULE = on
+
+VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
+BUILD := $(shell git rev-parse --short HEAD)
+LDFLAGS := -X main.Build=$(BUILD) -X main.Version=$(VERSION)
+GO := go
+
+%:
+	dh $@ --buildsystem=golang
+
+.PHONY: override_dh_auto_configure \
+	override_dh_strip \
+	override_dh_auto_build \
+	override_dh_auto_install \
+	override_dh_installsystemd \
+	override_dh_auto_test
+
+override_dh_auto_configure:
+	@${GO} mod vendor
+	@${GO} test -v ./...
+
+override_dh_strip:
+	# dh_strip cannot handle go binaries
+
+override_dh_auto_build:
+	@mkdir -p build
+ifeq ($(DEB_HOST_ARCH),amd64)
+	GOOS=linux GOARCH=amd64 ${GO} build -ldflags "${LDFLAGS}" -o build/confinit
+else ifeq ($(DEB_HOST_ARCH),armhf)
+	GOOS=linux GOARCH=arm GOARM=6 ${GO} build -ldflags "${LDFLAGS}" -o build/confinit
+else
+	@${GO} build -ldflags "${LDFLAGS}" -o build/confinit
+endif
+
+override_dh_auto_test:
+	# TODO
+
+override_dh_auto_install:
+	@install -m 755 -g root -o root -D build/confinit debian/confinit/bin/confinit
+	@install -m 644 -g root -o root -D systemd/confinit-boot@.service debian/confinit/lib/systemd/system/confinit-boot@.service
+	@install -m 644 -g root -o root -D systemd/confinit-final@.service debian/confinit/lib/systemd/system/confinit-final@.service
+
+override_dh_installsystemd:
+	dh_installsystemd --name=confinit-boot@boot-config
+	dh_installsystemd --name=confinit-final@boot-config
+

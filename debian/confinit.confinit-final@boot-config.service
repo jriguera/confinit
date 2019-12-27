@@ -1,0 +1,24 @@
+[Unit]
+Description=Confinit final files from /%I
+DefaultDependencies=no
+After=local-fs.target
+Before=shutdown.target
+Wants=network.target multi-user.target docker.service cloud-init.target
+After=network.target multi-user.target docker.service cloud-init.target
+Before=docker-compose.target
+Conflicts=shutdown.target
+ConditionFileIsExecutable=/bin/confinit
+ConditionPathExists=/%I/.confinit-final.yml
+# RequiresMountsFor=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+User=root
+Group=root
+ExecStart=/bin/confinit --config /%I/.confinit-final.yml
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target docker-compose.target

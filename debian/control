@@ -1,0 +1,28 @@
+Source: confinit
+Section: misc
+Priority: optional
+Standards-Version: 4.1.3
+Build-Depends: debhelper (>= 12), dh-golang
+Homepage: https://github.com/jriguera/confinit
+Maintainer: Jose Riguera <jriguera@gmail.com>
+Vcs-Browser: https://github.com/jriguera/confinit
+Vcs-Git: https://github.com/jriguera/confinit
+XS-Go-Import-Path: confinit/cmd/confinit
+
+Package: confinit
+Architecture: any
+Section: misc
+Priority: optional
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: confinit
+Description: Cloud-Init alternative to provide automatic boot configuration
+ Boot configuration management for RaspberryPI and Linux, similar to Cloud-Init
+ but limited to copy files, render templates and execute commands cloning a
+ folder structure. Given a source folder structure (with files and sub-folders)
+ the primary goal of this program is replicate the same structure in a
+ destination folder. The program will scan the source folder and apply a list
+ of operations (copy, render, execute) in order. Each operation can define
+ types of files/folders to process via regular expressions and apply permissons
+ on the new files. There is also a global hooks to define startup and finish
+ scripts.
+

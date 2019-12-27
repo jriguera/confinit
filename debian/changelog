@@ -1,0 +1,37 @@
+confinit (0.3.3) unstable; urgency=low
+  * Avoid using FileInfo, changed to FileMode, with PreDelete == true, FileInfo does not represent anymore a file. Fix Predelete for replicator (problem with the extension)
+
+ -- Jose Riguera <jriguera@gmail.com>  Fri, 26 Apr 2019 00:14:49 +0200
+
+confinit (0.3.2) unstable; urgency=low
+  * fix localfs order
+  * fix ticker
+
+ -- Jose Riguera <jriguera@gmail.com>  Wed, 24 Apr 2019 22:26:35 +0200
+
+confinit (0.3.1) unstable; urgency=low
+  * fix force
+
+ -- Jose Riguera <jriguera@gmail.com>  Sun, 7 Apr 2019 00:11:47 +0200
+
+confinit (0.3) unstable; urgency=low
+  * fix default value for booleans by using pointers to bool
+  * add option to exclude files already processed in a previous operation
+
+ -- Jose Riguera <jriguera@gmail.com>  Sat, 6 Apr 2019 23:49:43 +0200
+
+confinit (0.2) unstable; urgency=low
+  * rename rendercondition to condition
+  * update readme
+  * update docs
+  * updated example
+  * added conditional template, predelete and allow complex data
+  * add predelete, conditional render and improve template vars
+
+ -- Jose Riguera <jriguera@gmail.com>  Wed, 27 Mar 2019 22:54:35 +0100
+
+confinit (0.1) unstable; urgency=low
+  * Initial version
+
+ -- Jose Riguera <jriguera@gmail.com>  Mon, 18 Mar 2019 00:16:08 +0100
+
