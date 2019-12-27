@@ -183,7 +183,8 @@ Development
 ===========
 
 Golang 1.11 . There is a `Makefile` to manage the development actions, releases
-and binaries. `make build` generates binaries for Linux *amd64* and *arm32*
+and binaries. `make build` generates binaries for: `linux-amd64`, `linux-arm-6`,
+`linux-arm-7` and `make deb` generates debian packages for `deb-amd64`, `deb-armhf`
 
 Golang Modules
 --------------
@@ -205,9 +206,20 @@ then build your project with `go build`. If `GO111MODULE=auto` is set, then your
 project cannot be in `$GOPATH`
 
 
+Debian package
+--------------
+
+The usual call to build a binary package is `dpkg-buildpackage -us -uc`.
+You might call debuild for other purposes, like `debuild clean` for instance.
+
+```
+# -us -uc skips package signing.
+dpkg-buildpackage -rfakeroot -us -uc
+```
+
 Author
 ======
 
-(c) 2019 Jose Riguera
+(c) 2019,2020 Jose Riguera
 
 Apache 2.0
