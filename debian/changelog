@@ -1,3 +1,22 @@
+confinit (0.3.4) unstable; urgency=low
+  * fix debian changelog
+  * bump version
+  * improve build script
+  * ignore deb folder
+  * add debian packaging resources
+  * update readme
+  * define targers for debian packages and binaries with make all
+  * use go 1.13
+  * improve makefile
+  * updated examples
+  * Update README.md
+  * hide configuration file
+  * improve systemd dependencies
+  * redefine configuration file
+  * confinit systemd files for boot and final
+  * Add sysctl dependency
+
+ -- Jose Riguera <jriguera@gmail.com>  Fri, 26 Apr 2019 00:14:49 +0200
 confinit (0.3.3) unstable; urgency=low
   * Avoid using FileInfo, changed to FileMode, with PreDelete == true, FileInfo does not represent anymore a file. Fix Predelete for replicator (problem with the extension)
 
