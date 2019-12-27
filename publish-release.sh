@@ -119,6 +119,7 @@ echo "* Generating debian package ..."
 # Add changelog to debian/changelog
 cp debian/changelog debian/changelog.tmp
 echo -e "$DEBIAN_CHANGELOG" > debian/changelog
+echo >> debian/changelog
 cat debian/changelog.tmp >> debian/changelog
 rm -f debian/changelog.tmp
 $MAKE deb

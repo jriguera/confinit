@@ -46,6 +46,7 @@ override_dh_auto_install:
 	@install -m 755 -g root -o root -D build/confinit debian/confinit/bin/confinit
 	@install -m 644 -g root -o root -D systemd/confinit-boot@.service debian/confinit/lib/systemd/system/confinit-boot@.service
 	@install -m 644 -g root -o root -D systemd/confinit-final@.service debian/confinit/lib/systemd/system/confinit-final@.service
+	@rm -f build/confinit
 
 override_dh_installsystemd:
 	dh_installsystemd --name=confinit-boot@boot-config
