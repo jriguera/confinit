@@ -90,25 +90,18 @@ fi
 
 # Get the last git commit made by this script
 LASTCOMMIT=$(git show-ref --tags -d | tail -n 1 | cut -d' ' -f 1)
+DEBIAN_CHANGELOG="${RELEASE} (${VERSION}) unstable; urgency=low\n"
 if [ -z "$LASTCOMMIT" ]
 then
     echo "* Changes since the beginning: "
     CHANGELOG=$(git log --pretty="- %h %aI %s (%an)")
-    DEBIAN_CHANGELOG=$(cat <<- EOF
-		${RELEASE} (${VERSION}) unstable; urgency=low
-		`echo "$(git log --pretty='  * %s')"`
-		`echo "$(git log --pretty='%n -- %aN <%aE>  %aD%n%n' HEAD^..HEAD)"`
-		EOF
-    )
+    DEBIAN_CHANGELOG+="$(git log --pretty='  * %s')\n\n"
+    DEBIAN_CHANGELOG+="$(git log --pretty=' -- %aN <%aE>  %aD%n%n' HEAD^..HEAD)"
 else
     echo "* Changes since last version with commit $LASTCOMMIT: "
     CHANGELOG=$(git log --pretty="- %h %aI %s (%an)" "${LASTCOMMIT}..@")
-    DEBIAN_CHANGELOG=$(cat <<-EOF
-		${RELEASE} (${VERSION}) unstable; urgency=low
-		`echo "$(git log --pretty='  * %s' ${LASTCOMMIT}..@)"`
-		`echo "$(git log --pretty='%n -- %aN <%aE>  %aD%n%n' ${LASTCOMMIT}^..${LASTCOMMIT})"`
-		EOF
-    )
+    DEBIAN_CHANGELOG+="$(git log --pretty='  * %s' ${LASTCOMMIT}..@)\n\n"
+    DEBIAN_CHANGELOG+="$(git log --pretty=' -- %aN <%aE>  %aD%n%n' ${LASTCOMMIT}^..${LASTCOMMIT})"
 fi
 if [ -z "$CHANGELOG" ]
 then
@@ -124,7 +117,10 @@ $MAKE build
 
 echo "* Generating debian package ..."
 # Add changelog to debian/changelog
-echo $DEBIAN_CHANGELOG >> debian/changelog
+cp debian/changelog debian/changelog.tmp
+echo -e "$DEBIAN_CHANGELOG" > debian/changelog
+cat debian/changelog.tmp >> debian/changelog
+rm -f debian/changelog.tmp
 $MAKE deb
 git add debian/changelog
 git commit -m "updated debian changelog for version $VERSION"
