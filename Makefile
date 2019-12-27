@@ -1,7 +1,8 @@
-PROJECTNAME = $(shell basename "$(PWD)")
-BINARY = ${PROJECTNAME}
+#!/usr/bin/make -f
 
-BUILD := $(shell git rev-parse HEAD)
+PROJECTNAME := $(shell basename "$(PWD)")
+BINARY := ${PROJECTNAME}
+BUILD := $(shell git rev-parse --short HEAD)
 VERSION := $(shell head -n1 VERSION)
 CHANGES := $(shell test -n "$$(git status --porcelain)" && echo '+CHANGES' || true)
 PKGS := $(shell go list ./... | grep -v /vendor)
@@ -11,20 +12,21 @@ LDFLAGS := -X main.Build=$(BUILD) -X main.Version=$(VERSION)
 export GO111MODULE=on
 
 # Define architectures
-AMD64 = linux
-ARM32 = 6 7
+BUILDER := linux-amd64 linux-arm-6 linux-arm-7
+DEBPKG := deb-amd64 deb-armhf
 
 # Go paths and tools
-GOBIN = $(GOPATH)/bin
-GOCMD = go
-GOVET = $(GOCMD) tool vet
-GOBUILD = $(GOCMD) build
-GOCLEAN = $(GOCMD) clean
-GOTEST = $(GOCMD) test
-GOGET = $(GOCMD) get
-GOLINT = $(GOBIN)/golint
-ERRCHECK = $(GOBIN)/errcheck
-STATICCHECK = $(GOBIN)/staticcheck
+GOBIN := $(GOPATH)/bin
+GOCMD := go
+GOVET := $(GOCMD) tool vet
+GOBUILD := $(GOCMD) build
+GOCLEAN := $(GOCMD) clean
+GOTEST := $(GOCMD) test
+GOGET := $(GOCMD) get
+GOLINT := $(GOBIN)/golint
+ERRCHECK := $(GOBIN)/errcheck
+STATICCHECK := $(GOBIN)/staticcheck
+
 
 .PHONY: all
 all: test build
@@ -45,7 +47,8 @@ clean-vendor:
 .PHONY: clean-build
 clean-build:
 	@echo "*** Deleting builds ***"
-	rm -Rf build/*
+	@rm -Rf build/*
+	@rm -Rf deb/*
 
 .PHONY: test
 test:
@@ -92,19 +95,23 @@ $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install &> /dev/null
 
-.PHONY: $(AMD64)
-$(AMD64):
-	@echo "*** Building amd64 $@ binary ***"
+# linux-amd64, linux-arm-6, linux-arm-7, linux-arm64
+.PHONY: $(BUILDER)
+$(BUILDER):
+	@echo "*** Building binary for $@ ***"
+	$(eval OS := $(word 1,$(subst -, ,$@)))
+	$(eval OSARCH := $(word 2,$(subst -, ,$@)))
+	$(eval ARCHV := $(word 3,$(subst -, ,$@)))
+	@if [ "$(OSARCH)" = "arm" ]; then export GOARM=${ARCHV}; fi
 	@mkdir -p build
-	$(eval OS := $(word 1, $@))
-	GOOS=${OS} GOARCH=amd64 ${GOBUILD} -ldflags "${LDFLAGS}" -o build/${BINARY}-${VERSION}-${OS}-amd64
+	GOOS=${OS} GOARCH=${OSARCH} ${GOBUILD} -ldflags "${LDFLAGS}" -o build/${BINARY}-${VERSION}-${OS}-${OSARCH}${ARCHV}
 
-.PHONY: $(ARM32)
-$(ARM32):
-	@echo "*** Building arm $@ binary ***"
-	@mkdir -p build
-	$(eval ARM := $(word 1, $@))
-	GOOS=linux GOARCH=arm GOARM=${ARM} ${GOBUILD} -ldflags "${LDFLAGS}" -o build/${BINARY}-${VERSION}-linux-arm${ARM}
+# deb-amd64 deb-armhf
+.PHONY: $(DEBPKG)
+$(DEBPKG):
+	@echo "*** Building debian package for $@ ***"
+	$(eval ARCH := $(word 2,$(subst -, ,$@)))
+	@mkdir -p deb
+	dpkg-buildpackage -rfakeroot -us -uc --host-arch=${ARCH} --target-arch=${${ARCH}}
+	@mv -f ../confinit_* deb/
 
-.PHONY: build
-build: $(ARM32) $(AMD64)
