@@ -29,7 +29,7 @@ STATICCHECK := $(GOBIN)/staticcheck
 
 
 .PHONY: all
-all: test build
+all: test build deb
 
 .PHONY: clean-all
 clean-all: clean clean-vendor clean-build
@@ -114,4 +114,12 @@ $(DEBPKG):
 	@mkdir -p deb
 	dpkg-buildpackage -rfakeroot -us -uc --host-arch=${ARCH} --target-arch=${${ARCH}}
 	@mv -f ../confinit_* deb/
+
+# from all
+.PHONY: build
+build: linux-amd64 linux-arm-6
+
+# from all
+.PHONY: deb
+deb: deb-amd64 deb-armhf
 
