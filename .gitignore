@@ -3,3 +3,8 @@
 /test/
 /build/
 /deb/
+/debian/.debhelper/
+/debian/confinit.substvars
+/debian/confinit/
+/debian/debhelper-build-stamp
+/debian/files
