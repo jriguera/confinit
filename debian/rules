@@ -49,6 +49,6 @@ override_dh_auto_install:
 	@rm -f build/confinit
 
 override_dh_installsystemd:
-	dh_installsystemd --name=confinit-boot@boot-config
-	dh_installsystemd --name=confinit-final@boot-config
+	dh_installsystemd --name=confinit-boot
+	dh_installsystemd --name=confinit-final
 

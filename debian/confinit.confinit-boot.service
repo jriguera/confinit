@@ -1,5 +1,5 @@
 [Unit]
-Description=Confinit boot files from /%I
+Description=Confinit boot files from /boot/config
 DefaultDependencies=no
 Requires=local-fs.target
 After=local-fs.target
@@ -10,7 +10,7 @@ Before=cloud-init-local.service
 Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
-ConditionPathExists=/%I/.confinit-boot.yml
+ConditionPathExists=/boot/config/.confinit-boot.yml
 # RequiresMountsFor=/boot
 
 [Service]
@@ -19,7 +19,7 @@ RemainAfterExit=yes
 StandardOutput=journal
 User=root
 Group=root
-ExecStart=/bin/confinit --config /%I/.confinit-boot.yml
+ExecStart=/bin/confinit --config /boot/config/.confinit-boot.yml
 PrivateTmp=yes
 
 [Install]
