@@ -112,7 +112,7 @@ $(DEBPKG):
 	@echo "*** Building debian package for $@ ***"
 	$(eval ARCH := $(word 2,$(subst -, ,$@)))
 	@mkdir -p deb
-	dpkg-buildpackage -rfakeroot -us -uc --host-arch=${ARCH} --target-arch=${${ARCH}}
+	dpkg-buildpackage -rfakeroot -us -uc -b --host-arch=${ARCH} --target-arch=${${ARCH}}
 	@mv -f ../confinit_* deb/
 
 # from all

@@ -17,6 +17,7 @@ confinit (0.3.4) unstable; urgency=low
   * Add sysctl dependency
 
  -- Jose Riguera <jriguera@gmail.com>  Fri, 26 Apr 2019 00:14:49 +0200
+
 confinit (0.3.3) unstable; urgency=low
   * Avoid using FileInfo, changed to FileMode, with PreDelete == true, FileInfo does not represent anymore a file. Fix Predelete for replicator (problem with the extension)
 
