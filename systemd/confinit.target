@@ -1,0 +1,9 @@
+[Unit]
+Description=Confinit
+DefaultDependencies=no
+Wants=local-fs.target
+After=local-fs.target btrfs-rebalance@volume-data.service
+ConditionFileIsExecutable=/bin/confinit
+
+[Install]
+WantedBy=sysinit.target

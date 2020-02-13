@@ -1,13 +1,10 @@
 [Unit]
-Description=Confinit boot files from /%I
+Description=Confinit (boot stage) on /%I
 DefaultDependencies=no
-Requires=local-fs.target
-After=local-fs.target
-Before=shutdown.target
-Before=cloud-config.target
-Before=sysinit.target
-Before=cloud-init-local.service
-Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service
+# Wants=local-fs.target
+After=local-fs.target confinit.target
+Before=cloud-init-local.service shutdown.target
+Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service systemd-timedated.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/.confinit-boot.yml
@@ -15,12 +12,13 @@ ConditionPathExists=/%I/.confinit-boot.yml
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-StandardOutput=journal
 User=root
 Group=root
 ExecStart=/bin/confinit --config /%I/.confinit-boot.yml
 PrivateTmp=yes
+# StandardOutput=journal
+StandardOutput=file:/var/log/confinit-boot-%N.log
 
 [Install]
-WantedBy=sysinit.target cloud-config.target
+WantedBy=local-fs.target confinit.target
+DefaultInstance=confinit-boot@boot-config.service
