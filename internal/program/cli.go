@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -15,13 +14,12 @@ import (
 	"confinit/pkg/runner"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type Program struct {
 	Build        string
 	Config       *config.Config
-	Data         map[string]interface{}
+	Data         interface{}
 	ConfigArg    string
 	Configurator config.Configurator
 }
@@ -49,41 +47,30 @@ func (p *Program) LoadConfig() error {
 			return errc
 		}
 		p.Config = cfg
-		return p.LoadData()
+		if p.Config.DataFile != "" {
+			if !config.ValidUrl(p.Config.DataFile) {
+				exist, filetype := config.ValidFile(p.Config.DataFile)
+				if !exist {
+					return fmt.Errorf("Datafile '%s' not found", p.Config.DataFile)
+				} else if filetype != "yaml" && filetype != "yml" && filetype != "json" {
+					return fmt.Errorf("File extension '%s' not supported", p.Config.DataFile)
+				}
+			}
+		}
+		return nil
 	}
 	return err
 }
 
 func (p *Program) LoadData() error {
-	data := make(map[string]interface{})
-	log := p.Configurator.Logger()
-	if p.Config == nil {
+	if p.Config == nil || p.Config.DataFile == "" {
 		return nil
 	}
-	if p.Config.DataFile == "" {
-		return nil
+	data, err := config.LoadResource(p.Config.DataFile)
+	if err == nil {
+		p.Data = data
 	}
-	datafile := p.Config.DataFile
-	if _, err := os.Stat(p.Config.DataFile); os.IsNotExist(err) {
-		log.Errorf("Data file not loaded: %s", err)
-		return err
-	}
-	log.Infof("Loading data from file: %s", datafile)
-	dataloader := viper.New()
-	basefile := filepath.Base(datafile)
-	dataloader.SetConfigName(strings.TrimSuffix(basefile, filepath.Ext(basefile)))
-	dataloader.AddConfigPath(filepath.Dir(datafile))
-	dataloader.SetConfigType(filepath.Ext(basefile)[1:])
-	if err := dataloader.ReadInConfig(); err != nil {
-		log.Errorf("Error reading data file %s: %s", datafile, err)
-		return err
-	}
-	if err := dataloader.Unmarshal(&data); err != nil {
-		log.Fatalf("Format of data file not correct, %s", err.Error())
-		return err
-	}
-	p.Data = data
-	return nil
+	return err
 }
 
 func (p *Program) GetJsonConfig() ([]byte, error) {
@@ -111,9 +98,14 @@ func (p *Program) RunAll() (err error) {
 	}
 	err = errStart
 	if errStart == nil {
-		rcP, errP := p.Process()
-		rcs[fmt.Sprintf("%s_RC_PROCESS", config.ConfigEnv)] = rcP
-		err = errP
+		// reload data because runstart can download it
+		err = p.LoadData()
+		rcs[fmt.Sprintf("%s_RC_LOAD_DATA", config.ConfigEnv)] = 1
+		if err == nil {
+			rcP, errP := p.Process()
+			rcs[fmt.Sprintf("%s_RC_PROCESS", config.ConfigEnv)] = rcP
+			err = errP
+		}
 	}
 	_, errFinish := p.RunFinish(rcs)
 	if errFinish != nil {
@@ -127,17 +119,41 @@ func (p *Program) RunAll() (err error) {
 func (p *Program) operation(f *fs.Fs, c *config.Operation, excludes []string) ([]string, error) {
 	errs := false
 	log := p.Configurator.Logger()
-	a, err := actions.NewActionRouter(c.Regex, c.DestinationPath,
-		*c.Default.Force, *c.DelExtension, *c.Template, *c.PreDelete, excludes)
+	a, err := actions.NewActionRouter(c.Regex, c.DestinationPath, *c.Default.Force, *c.DelExtension, *c.Template, excludes)
 	if err != nil {
+		return nil, err
+	}
+	err = a.AddData(p.Data)
+	if err != nil {
+		// Data from datafile
+		err = fmt.Errorf("Adding Data from datafile: %s", err)
+		return nil, err
+	}
+	err = a.AddData(c.Data)
+	if err != nil {
+		// local data from configuration
+		err = fmt.Errorf("Adding Data from operation configuration: %s", err)
 		return nil, err
 	}
 	dirmode, _ := strconv.ParseUint(c.Default.Mode.Dir, 8, 32)
 	filemode, _ := strconv.ParseUint(c.Default.Mode.File, 8, 32)
 	a.SetDefaultModes(os.FileMode(dirmode), os.FileMode(filemode))
-	a.AddData(p.Data) // Global
-	a.AddData(c.Data) // The one on this operation
 	a.SetCondition(c.RenderCondition)
+	if *c.Delete.PreStart {
+		a.SetDelete(actions.DeletePreStart)
+	}
+	if *c.Delete.AfterExec {
+		a.SetDelete(actions.DeleteAfterExec)
+	}
+	if *c.Delete.IfCondition {
+		a.SetDelete(actions.DeleteIfCondition)
+	}
+	if *c.Delete.IfEmpty {
+		a.SetDelete(actions.DeleteIfEmpty)
+	}
+	if *c.Delete.IfRenderFail {
+		a.SetDelete(actions.DeleteIfRenderFail)
+	}
 	for i, pe := range c.Perms {
 		mode, _ := strconv.ParseUint(pe.Mode, 8, 32)
 		errp := a.SetPermissions(pe.Glob, pe.User, pe.Group, os.FileMode(mode))
