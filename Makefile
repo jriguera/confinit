@@ -117,7 +117,7 @@ $(DEBPKG):
 
 # from all
 .PHONY: build
-build: linux-amd64 linux-arm-6
+build: linux-amd64 linux-arm-6 linux-arm64
 
 # from all
 .PHONY: deb
