@@ -1,10 +1,11 @@
 package config
 
 const (
-	ConfigType string = "yaml"
-	ConfigFile string = "config.yml"
-	ConfigPath string = "/etc/confinit"
-	ConfigEnv  string = "CONFINIT"
+	ConfigType      string = "yaml"
+	ConfigFile      string = "config.yml"
+	ConfigPath      string = "/etc/confinit"
+	ConfigEnv       string = "CONFINIT"
+	ConfigUserAgent string = "confinit"
 )
 
 type Permissions struct {
@@ -24,6 +25,14 @@ type Default struct {
 	Force *bool       `mapstructure:"force" default:"true"`
 }
 
+type Delete struct {
+	PreStart     *bool `mapstructure:"prestart" default:"false"`
+	IfEmpty      *bool `mapstructure:"ifempty" default:"true"`
+	IfCondition  *bool `mapstructure:"ifconfition" default:"true"`
+	IfRenderFail *bool `mapstructure:"ifrenderfail" default:"true"`
+	AfterExec    *bool `mapstructure:"afterexec" default:"true"`
+}
+
 type Operation struct {
 	DestinationPath string                 `mapstructure:"destination" valid:"configuration"`
 	Default         Default                `mapstructure:"default"`
@@ -33,7 +42,7 @@ type Operation struct {
 	Template        *bool                  `mapstructure:"template" default:"true"`
 	DelExtension    *bool                  `mapstructure:"delextension" default:"true"`
 	RenderCondition string                 `mapstructure:"condition"`
-	PreDelete       *bool                  `mapstructure:"predelete" default:"true"`
+	Delete          Delete                 `mapstructure:"delete"`
 	Command         *Runner                `mapstructure:"command" valid:"-"`
 }
 
