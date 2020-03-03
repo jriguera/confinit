@@ -29,7 +29,7 @@ import (
 
 type Templator struct {
 	*Replicator
-	Data    map[string]interface{}
+	Data    interface{}
 	Env     map[string]string
 	SkipExt bool
 }
@@ -46,7 +46,7 @@ func NewTemplator(glob, dst string, force, skipext bool, excludes []string) (*Te
 	}
 	r := Templator{
 		Replicator: rpc,
-		Data:       make(map[string]interface{}),
+		Data:       nil,
 		Env:        env,
 		SkipExt:    skipext,
 	}
@@ -59,10 +59,47 @@ func (ft *Templator) AddEnv(env map[string]string) {
 	}
 }
 
-func (ft *Templator) AddData(data map[string]interface{}) {
-	for key, value := range data {
-		ft.Data[key] = value
+func (ft *Templator) AddData(data interface{}) (err error) {
+	// convert to map[string]interface{} if
+	// input is map[interface{}]interface{}
+	switch y := data.(type) {
+	case map[interface{}]interface{}:
+		m := map[string]interface{}{}
+		for k, v := range y {
+			switch k2 := k.(type) {
+			case string:
+				m[k2] = v
+			default:
+				m[fmt.Sprint(k)] = v
+			}
+		}
+		data = m
 	}
+	if ft.Data == nil {
+		// non initialized
+		ft.Data = data
+		return
+	}
+	switch ft.Data.(type) {
+	case []interface{}:
+		// both are list, append
+		ft.Data = append(ft.Data.([]interface{}), data)
+	case map[string]interface{}:
+		switch y := data.(type) {
+		case map[string]interface{}:
+			// both are maps
+			for k, v := range y {
+				ft.Data.(map[string]interface{})[k] = v
+			}
+		default:
+			// current ft.Data is a map
+			// and new data is a not a map
+			err = fmt.Errorf("Cannot add/mix Data source type Map with other Data source(s)")
+		}
+	default:
+		err = fmt.Errorf("Cannot add/mix Data sources with different types")
+	}
+	return
 }
 
 type TemplateData struct {
@@ -79,7 +116,7 @@ type TemplateData struct {
 	DstBaseDir      string
 	Destination     string
 	DestinationPath string
-	Data            map[string]interface{}
+	Data            interface{}
 	Env             map[string]string
 }
 
