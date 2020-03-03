@@ -94,15 +94,15 @@ func (fr *Replicator) copyfile(src, dst string, dirmode, filemode os.FileMode) (
 	return bytes, err
 }
 
-func (fr *Replicator) Function(base string, path string, i os.FileMode) (err error) {
-	srcpath := filepath.Join(base, path)
-	dstpath := filepath.Join(fr.DstPath, path)
+func (fr *Replicator) Function(base string, path string, i os.FileMode) (dst string, err error) {
+	dst = filepath.Join(fr.DstPath, path)
+	src := filepath.Join(base, path)
 	if i.IsDir() {
-		err = fr.mkdir(dstpath, i)
+		err = fr.mkdir(dst, i)
 	} else {
-		_, err = fr.copyfile(srcpath, dstpath, os.FileMode(0755), i)
+		_, err = fr.copyfile(src, dst, os.FileMode(0755), i)
 		if err == nil {
-			err = fr.applyPermissions(dstpath)
+			err = fr.applyPermissions(dst)
 		}
 	}
 	return

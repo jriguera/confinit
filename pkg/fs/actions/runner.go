@@ -20,8 +20,8 @@ import (
 	"strings"
 )
 
-// ActionTemplate is an interface to define a configurator factory
-type ActionTemplate interface {
+// Execute is an interface to define a configurator factory
+type Execute interface {
 	Command(command []string)
 	SetEnv(env map[string]string)
 	SetTimeout(t int)
@@ -32,10 +32,10 @@ type ActionTemplate interface {
 
 type Runner struct {
 	*Templator
-	Render  bool
-	Cmd     string
-	ActionT ActionTemplate
-	Dir     string
+	Render bool
+	Cmd    string
+	Exec   Execute
+	Dir    string
 }
 
 func NewRunner(glob, dst string, force, skipext, render bool, excludes []string) (*Runner, error) {
@@ -50,36 +50,38 @@ func NewRunner(glob, dst string, force, skipext, render bool, excludes []string)
 	return &r, nil
 }
 
-func (tr *Runner) SetRunner(ar ActionTemplate, env map[string]string, timeout int, dir string) {
-	tr.Cmd = ar.String()
-	tr.ActionT = ar
+func (tr *Runner) SetRunner(exec Execute, env map[string]string, timeout int, dir string) {
+	tr.Cmd = exec.String()
+	tr.Exec = exec
 	tr.Env = env
 	tr.Dir = dir
-	tr.ActionT.SetTimeout(timeout)
-	tr.ActionT.SetEnv(env)
+	tr.Exec.SetTimeout(timeout)
+	tr.Exec.SetEnv(env)
 }
 
 func (tr *Runner) AddEnv(env map[string]string) {
 	for key, value := range env {
 		tr.Env[key] = value
 	}
-	tr.ActionT.SetEnv(tr.Env)
+	tr.Exec.SetEnv(tr.Env)
 }
 
-func (tr *Runner) Function(base string, path string, i os.FileMode) (err error) {
+func (tr *Runner) Function(base string, path string, i os.FileMode) (dst string, err error) {
 	tpldata := tr.NewTemplateData(base, path, i)
 	if tr.DstPath != "" {
 		if tr.Render {
-			if err = tr.Templator.Function(base, path, i); err != nil {
+			if dst, err = tr.Templator.Function(base, path, i); err != nil {
 				return
 			}
 		}
 	}
 	arg, errarg := tr.renderTemplateString("arg", tr.Cmd, tpldata)
 	if errarg != nil {
-		return fmt.Errorf("Cannot render process arg '%s', %s", tr.Cmd, errarg)
+		err = fmt.Errorf("Cannot render process arg '%s', %s", tr.Cmd, errarg)
+		return
 	}
 	command := strings.Fields(arg)
+	dst = arg
 	// run
 	homedir := tr.Dir
 	if homedir == "" {
@@ -88,8 +90,8 @@ func (tr *Runner) Function(base string, path string, i os.FileMode) (err error) 
 			homedir = tpldata.SourcePath
 		}
 	}
-	tr.ActionT.SetDir(homedir)
-	tr.ActionT.Command(command)
-	_, err = tr.ActionT.Run()
+	tr.Exec.SetDir(homedir)
+	tr.Exec.Command(command)
+	_, err = tr.Exec.Run()
 	return
 }

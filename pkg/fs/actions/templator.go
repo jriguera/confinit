@@ -146,15 +146,16 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	return nil
 }
 
-func (ft *Templator) Function(base string, path string, i os.FileMode) (err error) {
+func (ft *Templator) Function(base string, path string, i os.FileMode) (dst string, err error) {
 	if i.IsDir() {
 		// Using always default mode (is not replicate)
 		err = ft.mkdir(filepath.Join(ft.DstPath, path), i)
 	} else {
 		tpldata := ft.NewTemplateData(base, path, i)
+		dst = tpldata.Destination
 		err = ft.renderTemplate(tpldata, os.FileMode(0755), i)
 		if err == nil {
-			err = ft.applyPermissions(tpldata.Destination)
+			err = ft.applyPermissions(dst)
 		}
 	}
 	return
