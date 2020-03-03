@@ -91,39 +91,38 @@ func (p *Runner) run() *Status {
 			p.command.Stop()
 		}()
 	}
-	clock := time.NewTicker(time.Duration(100) * time.Millisecond)
-	defer clock.Stop()
-	running := true
-	for running {
-		console := true
-		for console {
+	// Print STDOUT and STDERR lines streaming from Cmd
+	doneChan := make(chan struct{})
+	go func() {
+		defer close(doneChan)
+		// Done when both channels have been closed
+		// https://dave.cheney.net/2013/04/30/curious-channels
+		for p.command.Stdout != nil || p.command.Stderr != nil {
 			select {
-			case stdoutLine := <-p.command.Stdout:
-				p.print(stdoutLine, false, false)
-			case stderrLine := <-p.command.Stderr:
-				p.print(stderrLine, true, false)
-			case <-clock.C:
-				console = false
-				break
-			}
-		}
-		// Check if command is done
-		select {
-		case finalStatus := <-statusChan:
-			running = false
-			if finalStatus.Exit == 0 {
-				p.print("Exit", false, true)
-			} else {
-				errtxt := "Error"
-				if finalStatus.Error != nil {
-					errtxt = finalStatus.Error.Error()
+			case line, open := <-p.command.Stdout:
+				if !open {
+					p.command.Stdout = nil
+					continue
 				}
-				p.print(errtxt, true, true)
+				p.print(line, false, false)
+			case line, open := <-p.command.Stderr:
+				if !open {
+					p.command.Stderr = nil
+					continue
+				}
+				p.print(line, true, false)
 			}
-			break
-		default:
-			// no, still running
 		}
+	}()
+	finalStatus := <-statusChan
+	if finalStatus.Exit == 0 {
+		p.print("Exit", false, true)
+	} else {
+		errtxt := "Error"
+		if finalStatus.Error != nil {
+			errtxt = finalStatus.Error.Error()
+		}
+		p.print(errtxt, true, true)
 	}
 	status := Status(p.command.Status())
 	return &status
