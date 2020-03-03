@@ -24,6 +24,7 @@ import (
 
 	fs "confinit/pkg/fs"
 	log "confinit/pkg/log"
+	tfunc "confinit/pkg/tplfunctions"
 )
 
 type Templator struct {
@@ -125,7 +126,7 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	if err := ft.mkdir(filepath.Dir(data.Destination), dirmode); err != nil {
 		return err
 	}
-	tpl, err := template.ParseFiles(data.SourceFullPath)
+	tpl, err := template.New(data.Source).Funcs(tfunc.TemplateFuncMap()).ParseFiles(data.SourceFullPath)
 	if err != nil {
 		return err
 	}
