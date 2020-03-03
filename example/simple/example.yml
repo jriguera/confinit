@@ -3,15 +3,15 @@ loglevel: debug
 datafile: simple/data.yml
 
 env:
-    A: B
-    c: D
-    eeee: "hola mundo"
+    A: A
+    c: c
+    eeee: "env vars are always capitalized"
 
 start:
     cmd: ["pwd"]
 
 finish:
-    cmd: ["pwd"]
+    cmd: ["sleep", "70"]
 
 process:
   - source: simple/templates
@@ -23,7 +23,8 @@ process:
           mode:
             file: "0755"
         data:
-          hola: adios
+          localdata: local
+          CAPITAL: CaPiTaL
         permissions:
           - glob: "*.txt"
             mode: "0600"
@@ -39,5 +40,7 @@ process:
           cmd: ["{{.Destination}}"]
           env:
             MIPI: pepe
+        delete:
+          ifempty: false
         data:
           hola: hola

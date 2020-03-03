@@ -4,8 +4,21 @@ b: bbbb
 C: |
      This is a multiline text
      Blba bla bla
+D: "      spaces    "
 
-1: aaa
+one: 1
+two: 2
+big: 100
+small: 3
+
+simple_list:
+    - aabb
+    - aacc
+    - dddd
+    - "hola mundo"
+    - "     string with  spaces   "
+    - 1111
+    - 2222
 
 complex:
     first: 1

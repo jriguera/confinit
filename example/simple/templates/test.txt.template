@@ -1,7 +1,21 @@
-{{ .Data.a }}
+{{ .Data.CAPITAL }}
 
-
+Map:
 {{ range $key, $value := .Data.complex }}
 > {{ $key }}: {{ $value }}
 {{ end }}
 
+List:
+{{ range $index, $value := .Data.simple_list }}
+> {{ $index }}: {{ $value }}
+{{ end }}
+
+Template tests:
+UUID: {{ uuid }}
+randomString: {{ randomString 6 }}
+randominteger: {{ random "0123456789" 6 }}
+env: {{ .Env.EEEE  }}
+env: {{ env "EEEE" }}
+now: {{ now | date "2006-01-02" }}
+now: {{ now | epoch }}
+trim ({{ .Data.D }}): {{ trim .Data.D }}
