@@ -1,24 +1,25 @@
 [Unit]
-Description=Confinit final files from /boot/config
+Description=Confinit (final stage) on /%I
 DefaultDependencies=no
-After=local-fs.target
-Before=shutdown.target
-Wants=network.target multi-user.target docker.service cloud-init.target
-After=network.target multi-user.target docker.service cloud-init.target
-Before=docker-compose.target
+Requires=network.target local-fs.target
+Wants=confinit-boot@%i.service
+After=confinit-boot@%i.service network-online.target bluetooth.service systemd-timesyncd.service
+After=docker.service
+Before=rc-local.service shutdown.target
+Before=docker-compose.target monit.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
-ConditionPathExists=/boot/config/.confinit-final.yml
-# RequiresMountsFor=/boot
+ConditionPathExists=/%I/.confinit-final.yml
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-StandardOutput=journal
 User=root
 Group=root
-ExecStart=/bin/confinit --config /boot/config/.confinit-final.yml
+ExecStart=/bin/confinit --config /%I/.confinit-final.yml
 PrivateTmp=yes
+# StandardOutput=journal
+StandardOutput=file:/var/log/confinit-final-%N.log
 
 [Install]
-WantedBy=multi-user.target docker-compose.target
+WantedBy=confinit.target
+DefaultInstance=confinit-final@boot-config.service
