@@ -110,16 +110,16 @@ process:
     operations: []
 ```
 
-Operations:
+Descriptive examples of operations:
 
-* Copy files:
+1. Copy all files to a destination (even binaries):
 ```
 - destination: /
   regex: '.*'
   template: false
 ```
 
-* Render templates, files with extension `.template` (which will be removed at
+2. Render templates, files with extension `.template` (which will be removed at
 destination, after rendering it because of `delextension: true`). Extra data,
 added on top of `datafile` setting, will be used to process these templates:
 ```
@@ -134,41 +134,41 @@ added on top of `datafile` setting, will be used to process these templates:
        key4: {}
 ```
 
-* Render template to determine what to do with the file (`delete` in this case)
+3. Render template to determine what to do with the file (`delete` in this case)
 ```
 - destination: /
   regex: '.*\.template'
   template: true
-  condition: '{{ if not .Data.iface }}delete{{ end }}'
+  condition: '{{if not .Data.iface}} delete {{end}}'
   delete:
     ifconfition: true
 ```
 
-Other options to `condition` field are:
+Other options to echo to `condition` field are (case insesitive, trim spaces):
 
-  * case `""` | `render`: continue processing file/template.
+  * with `""`, `render` or `continue`: continue processing file/template.
   * case `skip`: stop rendering template file (do not delete destination file if exists).
-  * case `delete`: stop rendering and delete current file (if exists).
-  * case `delete-if-empty`: delete the file only if template results in an empty file.
-  * case `delete-if-fail`: delete if template calls `fail "<msg>"` function or renderting template fails.
-  * case `delete-after-exec`: delete a file (when is a command/script template, see below) after its execution.
+  * `delete` or `delete-file` : stop rendering and delete current file (if exists).
+  * `delete-if-empty`: delete the file only if template results in an empty file.
+  * `delete-if-fail`: delete if template calls `fail "<msg>"` function or renderting template fails.
+  * `delete-after-exec`: delete a file (when is a command/script template, see below) after its execution.
 
 The setting `delete.ifcondition` (default `true`) controls if rendering templates
 can define delete actions. If is `false` it will NOT render the template if the 
 condition generates an output string, the output script will be used as informational
 message in the logs.
 
-Apart of the conditional ouput, `delete` parameter operates by its own and has
+Apart from the conditional ouput, `delete` parameter operates by its own and has
 these options with default values:
 
-  * `prestart` default `false`: always delete the file before processing it.
-  * `ifempty` default `true`: deletes if renders to an empty file.
-  * `ifconfition` default `true`: "do what the condition says".
-  * `ifrenderfail` default `true`: delete if the template does not render (or it calls `fail` function).
-  * `afterexec` default `true`: delete after executing the file (see below).
+  * `prestart` (default `false`): always delete the file before processing it.
+  * `ifempty` (default `true`): deletes if renders to an empty file.
+  * `ifconfition` (default `true`): "do what the condition says".
+  * `ifrenderfail` (default `true`): delete if the template does not render (or it calls `fail` function).
+  * `afterexec` (default `true`): delete after executing the file (see below).
 
 
-* Execute script
+4. Execute script (do not copy or render it, only execute it from the source)
 ```
 - command:
     cmd: ["{{.SourceFullPath}}"]
@@ -177,8 +177,8 @@ these options with default values:
   regex: '.*\.sh'
 ```
 
-* Copy and execute script, `command.cmd` points to the destination of the file being
-rendered. Delete after running it.
+5. Copy and execute script, `command.cmd` points to the destination of the file being rendered.
+Delete destination file after running it.
 ```
 - destination: /tmp
   regex: '.*\.sh'
@@ -194,8 +194,7 @@ rendered. Delete after running it.
     afterexec: true
 ```
 
-* Render template (keeping the full extension of the filename) and execute it
-(do not delete it):
+6. Render template (keeping the full extension of the filename) and execute it (do not delete it):
 ```
 - destination: /tmp
   regex: '.*\.sh'
