@@ -1,15 +1,14 @@
 confinit
 ========
 
-Boot configuration management for RaspberryPI and Linux, similar to Cloud-Init
-but limited to copy files, render templates and execute commands cloning a folder
-structure.
-
+Boot configuration management for RaspberryPI and Linux, simple Cloud-Init idea
+but limited to copy files, render templates and execute commands by cloning a 
+a source directory structure.
 
 Usage
 =====
 
-Complete example: https://github.com/jriguera/raspbian-cloud/tree/master/stage8/99-confinit/config
+Complete example: https://github.com/jriguera/raspbian-cloud/tree/master/stageZZ/99-confinit/config
 
 Given a source folder structure (with files and sub-folders) the primary goal of
 this program is replicate the same structure in a destination folder. The program
@@ -219,7 +218,8 @@ Templates
 Templates are implemented using `golang/text.template`. There is more information
 about how to write them in the official documentation: https://golang.org/pkg/text/template/
 
-Confinit defines template variables in the file `pkg/fs/actions/templator.go:TemplateData`
+Confinit defines template variables in the file 
+[`pkg/fs/actions/templator.go:TemplateData`](https://github.com/jriguera/confinit/blob/master/pkg/fs/actions/templator.go#L105)
 ```
 	IsDir           bool
 	Mode            string
@@ -242,7 +242,8 @@ So, for example, in order to get a variable defined in `datafile` you have
 define `{{ .Data.VARIABLE }} and to get the destination path of the current template
 `{{ .Destination }}`. Those getters can also be used in the `condition` parameter.
 
-There are a lot of template functions defined in the file `pkg/tplfunctions/tfunctions.go`
+There are a lot of template functions defined in the file 
+[`pkg/tplfunctions/tfunctions.go`](https://github.com/jriguera/confinit/blob/master/pkg/tplfunctions/tfunctions.go)
 ready to be used in template files, for example:
 
 ```
