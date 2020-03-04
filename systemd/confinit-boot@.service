@@ -1,14 +1,13 @@
 [Unit]
 Description=Confinit (boot stage) on /%I
 DefaultDependencies=no
-# Wants=local-fs.target
-After=local-fs.target confinit.target
-Before=cloud-init-local.service shutdown.target
-Before=systemd-sysctl.service systemd-modules-load.service systemd-timesyncd.service systemd-timedated.service
+Wants=systemd-remount-fs.service boot.mount
+After=systemd-remount-fs.service boot.mount
+Before=network-pre.target
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/.confinit-boot.yml
-# RequiresMountsFor=/boot
+RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
@@ -20,5 +19,5 @@ PrivateTmp=yes
 StandardOutput=file:/var/log/confinit-boot-%N.log
 
 [Install]
-WantedBy=local-fs.target confinit.target
+WantedBy=confinit.target
 DefaultInstance=confinit-boot@boot-config.service
