@@ -41,8 +41,8 @@ logoutput: split
 # Log level defines the verbosity
 loglevel: debug
 
-# File (format json or yaml, by the extension) with additional variables
-# accessible in templates
+# File (format json or yaml, by the extension) or HTTP url (GET) with additional
+# variables/structures accessible in templates
 datafile: conf/data.yml
 
 # Global environment variables accessible to programs and templates. Also the
@@ -54,7 +54,10 @@ env:
 # Startup command, non zero exit stops the execution.
 # * timeout: defines how many seconds to wait for the execution (def)
 # * dir: folder where the program will be executed (default is current dir)
-# * env: key/value environment variables
+# * env: key/value environment variables.
+# This command can perform operations on the datafile (see above), like
+# getting from a database/url and building it. Data from datafile is loaded
+# after this command runs and before the list of operations.
 start:
     cmd: ["pwd"]
     timeout: 60
@@ -71,6 +74,8 @@ start:
 # There are two additional environment variables defined automatically:
 # * CONFINIT_RC_START: stores the exit code of the `start` command.
 # * CONFINIT_RC_PROCESS: stores the exit code of the `process` operations.
+# * CONFINIT_RC_LOAD_DATA: stores an exit code of the result of loading the
+# datafile.
 finish:
     cmd: ["env"]
     timeout: 600
@@ -114,7 +119,9 @@ Operations:
   template: false
 ```
 
-* Render templates (files wiht extension .template, which will be removed at destination)
+* Render templates, files with extension `.template` (which will be removed at
+destination, after rendering it because of `delextension: true`). Extra data,
+added on top of `datafile` setting, will be used to process these templates:
 ```
 - destination: /
   regex: '.*\.template'
@@ -127,14 +134,39 @@ Operations:
        key4: {}
 ```
 
-* Delete destination file, render template if condition renders to empty string
+* Render template to determine what to do with the file (`delete` in this case)
 ```
 - destination: /
   regex: '.*\.template'
   template: true
-  predelete: true
-  condition: '{{ if not .Data.iface }}No interface{{ end }}'
+  condition: '{{ if not .Data.iface }}delete{{ end }}'
+  delete:
+    ifconfition: true
 ```
+
+Other options to `condition` field are:
+
+  * case `""` | `render`: continue processing file/template.
+  * case `skip`: stop rendering template file (do not delete destination file if exists).
+  * case `delete`: stop rendering and delete current file (if exists).
+  * case `delete-if-empty`: delete the file only if template results in an empty file.
+  * case `delete-if-fail`: delete if template calls `fail "<msg>"` function or renderting template fails.
+  * case `delete-after-exec`: delete a file (when is a command/script template, see below) after its execution.
+
+The setting `delete.ifcondition` (default `true`) controls if rendering templates
+can define delete actions. If is `false` it will NOT render the template if the 
+condition generates an output string, the output script will be used as informational
+message in the logs.
+
+Apart of the conditional ouput, `delete` parameter operates by its own and has
+these options with default values:
+
+  * `prestart` default `false`: always delete the file before processing it.
+  * `ifempty` default `true`: deletes if renders to an empty file.
+  * `ifconfition` default `true`: "do what the condition says".
+  * `ifrenderfail` default `true`: delete if the template does not render (or it calls `fail` function).
+  * `afterexec` default `true`: delete after executing the file (see below).
+
 
 * Execute script
 ```
@@ -145,7 +177,8 @@ Operations:
   regex: '.*\.sh'
 ```
 
-* Copy and execute script
+* Copy and execute script, `command.cmd` points to the destination of the file being
+rendered. Delete after running it.
 ```
 - destination: /tmp
   regex: '.*\.sh'
@@ -157,9 +190,12 @@ Operations:
     cmd: ["{{.Destination}}"]
     env:
       EXTRA_VAR: pepe
+  delete:
+    afterexec: true
 ```
 
-* Render template at destination and execute it
+* Render template (keeping the full extension of the filename) and execute it
+(do not delete it):
 ```
 - destination: /tmp
   regex: '.*\.sh'
@@ -174,9 +210,52 @@ Operations:
       EXTRA_VAR: pepe
   data:
     key: value
+  delete:
+    afterexec: false
 ```
 
-The template variables are defined in the file `pkg/fs/actions/templator.go:TemplateData`
+Templates
+---------
+
+Templates are implemented using `golang/text.template`. There is more information
+about how to write them in the official documentation: https://golang.org/pkg/text/template/
+
+Confinit defines template variables in the file `pkg/fs/actions/templator.go:TemplateData`
+```
+	IsDir           bool
+	Mode            string
+	SourceBaseDir   string
+	Source          string
+	Filename        string
+	SourceFile      string
+	Path            string
+	SourceFullPath  string
+	SourcePath      string
+	Ext             string
+	DstBaseDir      string
+	Destination     string
+	DestinationPath string
+	Data            interface{}
+	Env             map[string]string
+```
+
+So, for example, in order to get a variable defined in `datafile` you have 
+define `{{ .Data.VARIABLE }} and to get the destination path of the current template
+`{{ .Destination }}`. Those getters can also be used in the `condition` parameter.
+
+There are a lot of template functions defined in the file `pkg/tplfunctions/tfunctions.go`
+ready to be used in template files, for example:
+
+```
+UUID: {{ uuid }}
+randomString: {{ randomString 6 }}
+randominteger: {{ random "0123456789" 6 }}
+env: {{ .Env.EEEE  }}
+env: {{ env "EEEE" }}
+now: {{ now | date "2006-01-02" }}
+now: {{ now | epoch }}
+remove_spaces ({{ .Data.D }}): {{ trim .Data.D }}
+```
 
 
 Development
