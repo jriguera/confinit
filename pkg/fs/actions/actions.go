@@ -107,6 +107,9 @@ func (a *ActionRouter) condition(data *TemplateData) (bool, string, error) {
 		case "":
 			// continue
 			return true, "render", nil
+		case "continue":
+			// continue
+			return true, "render", nil
 		case "render":
 			// continue
 			return true, c, nil
@@ -117,6 +120,10 @@ func (a *ActionRouter) condition(data *TemplateData) (bool, string, error) {
 			// no render
 			a.Delete.Set(DeletePreStart)
 			return false, c, nil
+		case "delete-file":
+			// no render
+			a.Delete.Set(DeletePreStart)
+			return false, "delete", nil
 		case "delete-if-empty":
 			a.Delete.Set(DeleteIfEmpty)
 			return true, c, nil
