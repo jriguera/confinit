@@ -12,7 +12,7 @@ LDFLAGS := -X main.Build=$(BUILD) -X main.Version=$(VERSION)
 export GO111MODULE=on
 
 # Define architectures
-BUILDER := linux-amd64 linux-arm-6 linux-arm-7
+BUILDER := linux-amd64 linux-arm-6 linux-arm-7 linux-arm64
 DEBPKG := deb-amd64 deb-armhf
 
 # Go paths and tools
