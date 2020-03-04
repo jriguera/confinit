@@ -9,16 +9,16 @@ process:
     regex: '.*/default/.*\.template'
   - destination: /etc
     regex: '.*avahi.*'
-    rendercondition: '{{if not .Data.avahi}}Avahi configuration not defined {{end}}'
+    condition: '{{if not .Data.avahi}} DELETE {{end}}'
   - destination: /etc
     regex: '.*hostapd.*'
-    rendercondition: '{{if not .Data.hostapd}}No Wifi Access Point defined {{end}}'
+    condition: '{{if not .Data.hostapd}} DELETE {{end}}'
     permissions:
     - mode: "0640"
       glob: '*/hostapd.conf'
   - destination: /etc
     regex: '.*bluetooth.*'
-    rendercondition: '{{if not .Data.bluetooth}}Bluetooth disabled{{end}}'
+    condition: '{{if not .Data.bluetooth}} DELETE {{end}}'
   - destination: /etc
     regex: '.*wpa_supplicant.*'
     permissions:

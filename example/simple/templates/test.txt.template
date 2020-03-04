@@ -19,3 +19,6 @@ env: {{ env "EEEE" }}
 now: {{ now | date "2006-01-02" }}
 now: {{ now | epoch }}
 trim ({{ .Data.D }}): {{ trim .Data.D }}
+
+{{ fail "important msg" }}
+
