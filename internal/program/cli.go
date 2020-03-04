@@ -100,11 +100,13 @@ func (p *Program) RunAll() (err error) {
 	if errStart == nil {
 		// reload data because runstart can download it
 		err = p.LoadData()
-		rcs[fmt.Sprintf("%s_RC_LOAD_DATA", config.ConfigEnv)] = 1
 		if err == nil {
+			rcs[fmt.Sprintf("%s_RC_LOAD_DATA", config.ConfigEnv)] = 0
 			rcP, errP := p.Process()
 			rcs[fmt.Sprintf("%s_RC_PROCESS", config.ConfigEnv)] = rcP
 			err = errP
+		} else {
+			rcs[fmt.Sprintf("%s_RC_LOAD_DATA", config.ConfigEnv)] = 1
 		}
 	}
 	_, errFinish := p.RunFinish(rcs)
