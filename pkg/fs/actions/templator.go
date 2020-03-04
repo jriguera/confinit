@@ -149,7 +149,7 @@ func (ft *Templator) NewTemplateData(basedir, f string, i os.FileMode) *Template
 func (ft *Templator) renderTemplateString(name, value string, data *TemplateData) (string, error) {
 	// A Buffer needs no initialization.
 	var render bytes.Buffer
-	tpl, err := template.New(name).Parse(value)
+	tpl, err := template.New(name).Funcs(tfunc.TemplateFuncMap()).Parse(value)
 	if err != nil {
 		return "", err
 	}
