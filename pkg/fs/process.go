@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"text/template"
 
 	log "confinit/pkg/log"
 )
@@ -61,8 +62,14 @@ func (fs *Fs) Run(f Process) error {
 		for path := range fs.files {
 			if f.Match(path, fs.files[path]) {
 				if err := f.Function(fs.BasePath, path, fs.files[path]); err != nil {
+					switch err.(type) {
+					case template.ExecError:
+						// Errors comning from templates have a good description
+						log.Errorf("Failing %s", err)
+					default:
+						log.Errorf("Could not complete process with file '%s': %s", path, err)
+					}
 					f.AddError(path, err)
-					log.Errorf("Could not complete process with file '%s': %s", path, err)
 					e = true
 				}
 				f.AddProcessed(path, fs.dirs[path])
