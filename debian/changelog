@@ -1,3 +1,33 @@
+confinit (0.4.0) unstable; urgency=low
+  * New version
+  * Update README.md
+  * Update README.md
+  * add vendor packages
+  * enable creation of linux-arm64
+  * Improve debian package by adding systemd target and defining new services
+  * Format template error messages
+  * Define continue, delete-file aliases in condition templates
+  * update examples
+  * Improve systemd units and add a target
+  * Update documentation
+  * Define CONFINIT_RC_LOAD_DATA with 0 or 1 depending on the result of loading datafile
+  * Apply template functions also to render conditions
+  * update simple example
+  * Update to go 1.14 and remove vendor folder
+  * Add arch linux arm 64
+  * Get rid of Viper to fix the bug uncapitalizing keys in DATAFILE. Load DATA (from files or HTTP) after start process and before operations to allow startup script to process data. Apply new DELETE actions from main configuration file
+  * Define new configuration settings for Delete actions
+  * Implement loading DATA files as YAML, JSON or via HTTP (JSON)
+  * Implement Data on templates as interface{} type instead of map in order to allow json lists at root level
+  * Implement Delete conditions: predelete, postdelete-if-empty, postdelete-if-fail, postdelete-after-exec
+  * Implement a lot of useful template functions
+  * Update runner to work with go-cmd v 1.2.0 and up
+  * Update golang dependencies
+  * Improve systemd unit dependencies
+  * mask debhelpers
+
+ -- Jose Riguera <jriguera@gmail.com>  Wed, 1 Jan 2020 18:42:37 +0100
+
 confinit (0.3.5) unstable; urgency=low
   * only binary deb packages
   * bump version
