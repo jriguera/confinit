@@ -111,6 +111,7 @@ type TemplateData struct {
 	SourceFile      string
 	Path            string
 	SourceFullPath  string
+	SourceAbsPath   string
 	SourcePath      string
 	Ext             string
 	DstBaseDir      string
@@ -125,6 +126,11 @@ func (ft *Templator) NewTemplateData(basedir, f string, i os.FileMode) *Template
 	if ft.SkipExt && !i.IsDir() {
 		dstf = strings.TrimSuffix(f, filepath.Ext(f))
 	}
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = ""
+	}
+	abspath := filepath.Join(dir, basedir, f)
 	fullpath := filepath.Join(basedir, f)
 	dstpath := filepath.Join(ft.DstPath, dstf)
 	data := TemplateData{
@@ -136,6 +142,7 @@ func (ft *Templator) NewTemplateData(basedir, f string, i os.FileMode) *Template
 		Filename:        filepath.Base(dstf),
 		Ext:             filepath.Ext(filepath.Base(dstf)),
 		SourceFullPath:  fullpath,
+		SourceAbsPath:   abspath,
 		SourcePath:      filepath.Dir(fullpath),
 		DstBaseDir:      ft.DstPath,
 		Destination:     dstpath,
