@@ -95,7 +95,7 @@ The functionality of the program is defined in the field `process`:
 # default, it allows scanning all folders and files. The list of files is print
 # out in debug `loglevel`. if `excludedone` is true (by default) when one file
 # is processed by one operation, it will be ignored in other operations (is
-# important the order of the operations).
+# important the order of the operations!).
 process:
   - source: conf/templates
     excludedone: true
@@ -167,17 +167,24 @@ these options with default values:
   * `afterexec` (default `true`): delete after executing the file (see below).
 
 
-4. Execute script (do not copy or render it, only execute it from the source)
+4. Execute shell scripts, but do not copy or render to destination, just execute it from
+   the source. Because there is no `destination`, `template` field is ignored
+   (assumes it is not a template). This is useful to run scripts in the middle
+   of processing other files. Make sure the source scripts are executable.
+   `{{.SourceAbsPath}}` is the absolute path of the source file and in this case
+   delete `afterexec` does not apply.
 ```
-- command:
-    cmd: ["{{.SourceFullPath}}"]
+- regex: '.*\.sh'
+  command:
+    cmd: ["{{.SourceAbsPath}}"]
     env:
-      EXTRA_VAR: pepe
-  regex: '.*\.sh'
+      EXTRA_VAR: pepe2
 ```
 
-5. Copy and execute script, `command.cmd` points to the destination of the file being rendered.
-Delete destination file after running it.
+1. Copy and execute shell scripts (no templates, potentially can be binary!),
+   `command.cmd` points to the destination of the file being rendered. It makes
+   sure the generated scripts have execution permissions and it will delete each
+   one after running it.
 ```
 - destination: /tmp
   regex: '.*\.sh'
@@ -187,13 +194,13 @@ Delete destination file after running it.
   template: false
   command:
     cmd: ["{{.Destination}}"]
-    env:
-      EXTRA_VAR: pepe
   delete:
     afterexec: true
 ```
 
-6. Render template (keeping the full extension of the filename) and execute it (do not delete it):
+1. Render shell script templates (keeping the full extension of the filename: `delextension: false`)
+   and execute each one with extra data `key: value` (to render inside the
+   temaptes) and do not delete them after execution:
 ```
 - destination: /tmp
   regex: '.*\.sh'
@@ -204,8 +211,6 @@ Delete destination file after running it.
   template: true
   command:
     cmd: ["{{.Destination}}"]
-    env:
-      EXTRA_VAR: pepe
   data:
     key: value
   delete:
