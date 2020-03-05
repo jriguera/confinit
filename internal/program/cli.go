@@ -204,7 +204,7 @@ func (p *Program) Process() (int, error) {
 			log.Error(err)
 		}
 		for j, oper := range proc.Operations {
-			log.Infof("Processing #%d operation in %s", j+1, proc.Source)
+			log.Infof("Processing #%d operation in source: %s", j+1, proc.Source)
 			done, err := p.operation(f, oper, processed)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("#%d %s: %s", i+1, proc.Source, err))
