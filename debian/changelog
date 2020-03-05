@@ -1,3 +1,13 @@
+confinit (0.4.1) unstable; urgency=low
+  * New version
+  * Update documentation
+  * cosmetic stdout changes
+  * Add SourceAbsPath variable to templates to provide absolute path
+  * Show full path when read files
+  * rename path variable to avoid collision with path package
+
+ -- Jose Riguera <jriguera@gmail.com>  Wed, 4 Mar 2020 23:01:02 +0100
+
 confinit (0.4.0) unstable; urgency=low
   * New version
   * Update README.md
