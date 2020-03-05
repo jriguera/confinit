@@ -47,32 +47,32 @@ type Process interface {
 func (fs *Fs) Run(f Process) error {
 	e := false
 	if f.Type(FsItemAll) || f.Type(FsItemDir) {
-		for path := range fs.dirs {
-			if f.Match(path, fs.dirs[path]) {
-				if err := f.Function(fs.BasePath, path, fs.dirs[path]); err != nil {
-					f.AddError(path, err)
-					log.Errorf("Could not complete process with folder '%s': %s", path, err)
+		for dir := range fs.dirs {
+			if f.Match(dir, fs.dirs[dir]) {
+				if err := f.Function(fs.BasePath, dir, fs.dirs[dir]); err != nil {
+					f.AddError(dir, err)
+					log.Errorf("Could not complete process with folder '%s': %s", dir, err)
 					e = true
 				}
-				f.AddProcessed(path, fs.dirs[path])
+				f.AddProcessed(dir, fs.dirs[dir])
 			}
 		}
 	}
 	if f.Type(FsItemAll) || f.Type(FsItemFile) {
-		for path := range fs.files {
-			if f.Match(path, fs.files[path]) {
-				if err := f.Function(fs.BasePath, path, fs.files[path]); err != nil {
+		for archive := range fs.files {
+			if f.Match(archive, fs.files[archive]) {
+				if err := f.Function(fs.BasePath, archive, fs.files[archive]); err != nil {
 					switch err.(type) {
 					case template.ExecError:
 						// Errors comning from templates have a good description
 						log.Errorf("Failing %s", err)
 					default:
-						log.Errorf("Could not complete process with file '%s': %s", path, err)
+						log.Errorf("Could not complete process with file '%s': %s", archive, err)
 					}
-					f.AddError(path, err)
+					f.AddError(archive, err)
 					e = true
 				}
-				f.AddProcessed(path, fs.dirs[path])
+				f.AddProcessed(archive, fs.dirs[archive])
 			}
 		}
 	}
