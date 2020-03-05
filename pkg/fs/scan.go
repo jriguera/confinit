@@ -17,6 +17,7 @@ package fs
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 
@@ -33,8 +34,9 @@ func (fs *Fs) Scan(p string) error {
 }
 
 func (fs *Fs) scan(p string, i os.FileInfo, err error) error {
+	abspath := path.Join(fs.CurrentPath, p)
 	if err != nil {
-		err = fmt.Errorf("Cannot scan path '%s', %s", p, err.Error())
+		err = fmt.Errorf("Cannot scan path '%s', %s", abspath, err.Error())
 		return err
 	}
 	relp, err := filepath.Rel(fs.BasePath, p)
@@ -51,7 +53,7 @@ func (fs *Fs) scan(p string, i os.FileInfo, err error) error {
 			log.Debugf("Skipping folder due to not matching glob '%s': %s", fs.DirGlob.String(), relp)
 			return filepath.SkipDir
 		}
-		log.Debugf("Adding folder: %s", p)
+		log.Debugf("Adding folder: %s", abspath)
 		fs.dirs[relp] = i.Mode()
 	} else if i.Mode().IsRegular() || i.Mode()&os.ModeSymlink != 0 {
 		if fs.SkipFileGlob != nil && fs.SkipFileGlob.MatchString(relp) {
@@ -63,10 +65,10 @@ func (fs *Fs) scan(p string, i os.FileInfo, err error) error {
 			log.Debugf("Skipping file due to not matching glob '%s': %s", fs.FileGlob.String(), relp)
 			return nil
 		}
-		log.Debugf("Adding file: %s", p)
+		log.Debugf("Adding file: %s", abspath)
 		fs.files[relp] = i.Mode()
 	} else {
-		log.Debugf("Skipping non regular file: %s", p)
+		log.Debugf("Skipping non regular file: %s", abspath)
 	}
 	return nil
 }

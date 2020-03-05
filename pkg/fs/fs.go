@@ -23,6 +23,7 @@ import (
 type MapFile map[string]os.FileMode
 
 type Fs struct {
+	CurrentPath  string
 	BasePath     string
 	SkipDirGlob  *Glob
 	SkipFileGlob *Glob
@@ -91,9 +92,14 @@ func DirGlob(s string) Option {
 
 // New is the contructor
 func New(opts ...Option) *Fs {
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = "."
+	}
 	fglob, _ := NewGlob("*")
 	dglob, _ := NewGlob("*")
 	f := &Fs{
+		CurrentPath:  dir,
 		SkipDirGlob:  nil,
 		SkipFileGlob: nil,
 		FileGlob:     fglob,
