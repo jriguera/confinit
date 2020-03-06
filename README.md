@@ -234,6 +234,7 @@ Confinit defines template variables in the file
 	SourceFile      string
 	Path            string
 	SourceFullPath  string
+	SourceAbsPath   string
 	SourcePath      string
 	Ext             string
 	DstBaseDir      string
@@ -266,14 +267,14 @@ remove_spaces ({{ .Data.D }}): {{ trim .Data.D }}
 Development
 ===========
 
-Golang 1.11 . There is a `Makefile` to manage the development actions, releases
+Golang 1.14 . There is a `Makefile` to manage the development actions, releases
 and binaries. `make build` generates binaries for: `linux-amd64`, `linux-arm-6`,
 `linux-arm-7` and `make deb` generates debian packages for `deb-amd64`, `deb-armhf`
 
 Golang Modules
 --------------
 
-Go 1.11 has a feature `vgo` which will replace `dep`. To use `vgo`,
+Go 1.14 has a feature `vgo` which will replace `dep`. To use `vgo`,
 see https://github.com/golang/go/wiki/Modules.
 
 TLDR below:
