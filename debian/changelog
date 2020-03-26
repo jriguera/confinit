@@ -1,3 +1,10 @@
+confinit (0.4.2) unstable; urgency=low
+  * release version 0.4.2
+  * improve systemd dependencies in order to run boot stage asap
+  * Update README.md
+
+ -- Jose Riguera <jriguera@gmail.com>  Thu, 5 Mar 2020 23:04:25 +0100
+
 confinit (0.4.1) unstable; urgency=low
   * New version
   * Update documentation
