@@ -1,4 +1,4 @@
-{{ if .Data.system.forceipv4 }}
+{{ if .Data.system.force_ipv4 }}
 # to disable IPv6 on all interfaces system wide
 net.ipv6.conf.all.disable_ipv6 = 1
 
@@ -6,10 +6,8 @@ net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
 {{ end }}
 
-{{ if .Data.networking.eth0.forceipv4 }}
-net.ipv6.conf.eth0.disable_ipv6 = 1
+{{ range $key, $value := .Data.networking -}}
+{{ if $value.ForceIPv4 }}
+net.ipv6.conf.{{ $key }}.disable_ipv6 = 1
 {{ end }}
-{{ if .Data.networking.wlan0.forceipv4 }}
-net.ipv6.conf.wlan0.disable_ipv6 = 1
 {{ end }}
-

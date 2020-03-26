@@ -1,0 +1,45 @@
+table inet filter {
+  chain input {
+    type filter hook input priority 0;
+
+    # allow established/related connections
+    ct state {established, related} counter accept
+
+    # early drop of invalid connections
+    ct state invalid counter drop
+	#ct state invalid log prefix "[BLOCK] invalid packet: " drop
+
+    # allow from loopback and internal iface
+    meta iif lo counter accept
+    meta iif $int_if accept
+
+    # allow icmp
+	# icmp for ipv4 connections rate limiting
+	icmp type {
+		destination-unreachable, router-advertisement, 
+		time-exceeded, parameter-problem 
+	} limit rate 100/second accept
+	icmpv6 type {
+		echo-request, destination-unreachable, packet-too-big,
+		time-exceeded, parameter-problem, nd-router-advert,
+		nd-neighbor-solicit, nd-neighbor-advert
+	} limit rate 100/second accept
+
+    # allow service
+    tcp dport $ext_services_tcp accept
+    udp dport $ext_services_udp accept
+
+    # everything else
+    counter reject with icmp type port-unreachable
+	#log prefix "[BLOCK] denied packet: " drop
+  }
+  chain forward {
+    type filter hook forward priority 0;
+	policy drop;
+  }
+  chain output {
+    type filter hook output priority 0;
+	policy accept;
+	# ct state related, established accept;
+  }
+}

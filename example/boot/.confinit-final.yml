@@ -2,21 +2,35 @@ logoutput: split
 loglevel: debug
 datafile: /boot/config/parameters.yml
 
+special_permissions: &permissions
+- glob: '*.conf'
+  mode: "0644"
+- glob: '*.sh'
+  mode: "0755"
+- glob: '*/bin/*'
+  mode: "0755"
+- glob: '*/sbin/*'
+  mode: "0755"
+
 process:
+- source: /boot/config/data
+  operations:
+  - destination: /data
+    regex: '.*\.template'
+    permissions: *permissions
+  - destination: /data
+    template: false
+    permissions: *permissions
 
 - source: /boot/config/local
   operations:
   - destination: /usr/local
     template: false
-    permissions:
-    - mode: "0755"
-      glob: '*/bin/*'
-    - mode: "0755"
-      glob: '*/sbin/*'
+    permissions: *permissions
 
 - source: /boot/config/scripts/final
   operations:
-  - destination: /tmp/confinit
+  - destination: /var/run/confinit/final
     template: true
     delextension: false
     default:

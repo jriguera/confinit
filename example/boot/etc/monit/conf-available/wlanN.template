@@ -1,0 +1,22 @@
+#
+## Check a network link status (up/down), link capacity changes, saturation
+## and bandwidth usage.
+#
+{{ if .Data.monit }}
+{{ if .Data.monit.Alerts }}
+{{ $monit := .Data.monit.Alerts }}
+{{ range $key, $value := .Data.networking }}
+{{ if hasPrefix "wlan" $key }}
+{{ $alert := get $monit $key }}
+check network wifi with interface {{ $key }}
+    group system
+    if failed link then alert
+    if changed link then alert
+    if saturation > 90% then alert
+{{ if $alert }}{{ if $alert.upload }}    if total uploaded > {{ $alert.upload }} then alert{{ end }}
+{{ if $alert.download }}    if total downloaded > {{ $alert.download }} then alert{{ end }}{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
+

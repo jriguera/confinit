@@ -1,0 +1,16 @@
+# NAT
+table ip nat {
+	chain prerouting {
+		type nat hook prerouting priority 0;
+		# policy accept;
+        # DNAT to allow some ports
+        iif $ext_if tcp dport $ext_forwarding1_tcp dnat $ext_forwarding1_ip
+		# iif $ext_if udp dport $ext_forwarding1_udp dnat $ext_forwarding1_ip
+	}
+	# for all packets to WAN, after routing, replace source address with primary IP of WAN interface
+	chain postrouting {
+		type nat hook postrouting priority 0;
+		# policy accept;
+		oif $int_if masquerade
+	}
+}

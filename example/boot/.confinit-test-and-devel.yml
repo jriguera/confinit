@@ -1,0 +1,45 @@
+logoutput: split
+loglevel: debug
+datafile: parameters.yml
+
+special_permissions: &permissions
+- glob: '*.conf'
+  mode: "0644"
+- glob: '*.network'
+  mode: "0644"
+- glob: '*/wpa_supplicant/wpa_supplicant*.conf'
+  mode: "0640"
+- glob: '*/hostapd/hostapd.conf'
+  mode: "0640"
+- glob: '*/sudoers.d/*'
+  mode: "0640"
+- glob: '*/ssh/sshd_config'
+  mode: "0644"
+- glob: '*/ssh/*key'
+  mode: "0600"
+- glob: '*/ssh/*key.pub'
+  mode: "0644"
+- glob: '*.sh'
+  mode: "0755"
+
+process:
+- source: etc
+  operations:
+  - destination: /tmp/devel/etc
+    regex: '.*\.template'
+    permissions: *permissions
+  - destination: /tmp/raspi/etc
+    template: false
+    permissions: *permissions
+
+- source: scripts
+  operations:
+  - destination: /tmp/devel/exec
+    delextension: false
+    template: true
+    delete:
+      prestart: true
+      afterexec: false
+    command:
+      cmd: ["/bin/true"]
+

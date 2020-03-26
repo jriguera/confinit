@@ -2,7 +2,11 @@
 
 # Default adapter name
 # Defaults to 'BlueZ X.YZ'
-{{ if .Data.bluetooth.name }}Name = {{.Data.bluetooth.name }}{{ end }}
+{{ if .Data.bluetooth.name }}
+Name = {{.Data.bluetooth.name }}
+{{ else }}
+Name = {{ .Data.system.hostname }}
+{{ end }}
 
 # Default device class. Only the major and minor device class bits are
 # considered. Defaults to '0x000000'.
@@ -41,7 +45,7 @@
 # Enable name resolving after inquiry. Set it to 'false' if you don't need
 # remote devices name and want shorter discovery cycle. Defaults to 'true'.
 #NameResolving = true
-{{ if .Data.bluetooth.resolving }}NameResolving = {{.Data.bluetooth.resolving }}{{ end }}
+NameResolving = {{ if .Data.bluetooth.resolving }}true{{ else }}false{{ end }}
 
 # Enable runtime persistency of debug link keys. Default is false which
 # makes debug link keys valid only for the duration of the connection
@@ -66,7 +70,7 @@
 # will fully work only on kernel version 4.1 and newer. Defaults to
 # 'false'.
 #FastConnectable = false
-{{ if .Data.bluetooth.fast_connect }}FastConnectable = {{.Data.bluetooth.fast_connect }}{{ end }}
+FastConnectable = {{ if .Data.bluetooth.fast_connect }}true{{ else }}false{{ end }}
 
 # Default privacy setting.
 # Enables use of private address.

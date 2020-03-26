@@ -3,8 +3,10 @@
 ## stop may be cascaded to them before the filesystem will become full and data
 ## lost.
 #
-check filesystem bootfs with path /boot
-    if space usage > {{.Data.system.monit.alerts.fs }} then alert
+{{ if .Data.monit }}{{ if .Data.monit.Alerts }}{{ if .Data.monit.Alerts.fs }}
+check filesystem boot.fs with path /boot
+    if space usage > {{.Data.monit.Alerts.fs }} then alert
     if changed fsflags then alert
     group system
+{{ end }}{{ end }}{{ end }}
 

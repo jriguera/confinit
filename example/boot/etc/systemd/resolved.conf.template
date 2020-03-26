@@ -12,11 +12,17 @@
 # See resolved.conf(5) for details
 
 [Resolve]
+{{ if .Data.system.dns }}
+DNS={{range .Data.system.dns }}{{.}} {{ end }}
+{{ else }}
 DNS=127.0.0.1
-FallbackDNS=8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::8844
+{{ end }}
 #Domains=
 #LLMNR=yes
 #DNSSEC=no
+# Caching is turned off implicitly if the configured DNS server is on a host-local IP address (such as 127.0.0.1 or ::1), in order to avoid duplicate local caching.
+#Cache=no-negative
 Cache=yes
+# DNSmasq will take care of DNSStubListener, only files should be created for dnsmasq
 DNSStubListener=no
 

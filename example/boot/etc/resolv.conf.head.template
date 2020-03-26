@@ -1,9 +1,0 @@
-{{range .Data.system.dns }}
-nameserver {{.}}
-{{ else }}
-nameserver 127.0.0.1
-{{ end }}
-
-{{ if .Data.system.domain }}
-search {{ .Data.system.domain }}
-{{ end }}

@@ -2,37 +2,47 @@ logoutput: split
 loglevel: debug
 datafile: /boot/config/parameters.yml
 
+special_permissions: &permissions
+- glob: '*.conf'
+  mode: "0644"
+- glob: '*.network'
+  mode: "0644"
+- glob: '*/wpa_supplicant/wpa_supplicant*.conf'
+  mode: "0640"
+- glob: '*/hostapd/hostapd.conf'
+  mode: "0640"
+- glob: '*/sudoers.d/*'
+  mode: "0640"
+- glob: '*/ssh/sshd_config'
+  mode: "0644"
+- glob: '*/ssh/*key'
+  mode: "0600"
+- glob: '*/ssh/*key.pub'
+  mode: "0644"
+- glob: '*.sh'
+  mode: "0755"
+
 process:
 - source: /boot/config/etc
   operations:
   - destination: /etc
-    regex: '.*/default/.*\.template'
-  - destination: /etc
-    regex: '.*avahi.*'
-    condition: '{{if not .Data.avahi}} DELETE {{end}}'
-  - destination: /etc
-    regex: '.*hostapd.*'
-    condition: '{{if not .Data.hostapd}} DELETE {{end}}'
-    permissions:
-    - mode: "0640"
-      glob: '*/hostapd.conf'
-  - destination: /etc
-    regex: '.*bluetooth.*'
-    condition: '{{if not .Data.bluetooth}} DELETE {{end}}'
-  - destination: /etc
-    regex: '.*wpa_supplicant.*'
-    permissions:
-    - mode: "0640"
-      glob: '*/wpa_supplicant.conf'
-  - destination: /etc
+    delete:
+      prestart: true
     regex: '.*\.template'
+    permissions: *permissions
   - destination: /etc
     template: false
+    permissions: *permissions
 
-# Execute thse scripts during boot
+- source: /boot/config
+  operations:
+  - destination: /etc/docker-compose
+    regex: 'docker-compose\.yml'
+    template: false
+
 - source: /boot/config/scripts/boot
   operations:
-  - destination: /tmp/confinit
+  - destination: /var/run/confinit/boot
     template: true
     delextension: false
     default:

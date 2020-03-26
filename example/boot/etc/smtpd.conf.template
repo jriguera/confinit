@@ -6,10 +6,10 @@ table aliases file:/etc/mail/aliases
 table users file:/etc/mail/users
 
 # To accept external mail, replace with: listen on all
-listen on {{ if .Data.mail.iface }}{{ .Data.mail.iface }}{{ else }}lo{{ end }}
+listen on {{ if .Data.smtp.iface }}{{ .Data.smtp.iface }}{{ else }}lo{{ end }}
 
 # Expire after n days
-expire {{ if .Data.mail.expire }}{{ .Data.mail.expire }}{{ else }}7d{{ end }}
+expire {{ if .Data.smtp.expire }}{{ .Data.smtp.expire }}{{ else }}7d{{ end }}
 
 # Limit mails in queue to 50
 limit session max-mails 50
@@ -21,7 +21,7 @@ accept for local alias <aliases> deliver to mbox
 accept for domain "localhost" alias <aliases> deliver to mbox
 accept from local for any relay
 
-{{ if .Data.mail.relay }}
+{{ if .Data.smtp.relay }}
 include "/etc/mail/smtpd.conf.local"
 {{ end }}
 

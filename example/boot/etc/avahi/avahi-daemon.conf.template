@@ -8,14 +8,17 @@ host-name={{ .Data.system.hostname }}
 domain-name={{ .Data.system.domain }}
 use-ipv4=yes
 use-ipv6=no
-{{ if .Data.avahi.iface }}allow-interfaces={{ .Data.avahi.iface }}{{ end }}
+{{ if .Data.avahi.ifaces }}allow-interfaces={{ range $i, $iface := .Data.avahi.ifaces }}{{if $i}},{{end}}{{ $iface }}{{end}}
+{{ else if .Data.networking }}allow-interfaces={{ .Data.networking | keys | sort | join "," }}
+{{ else }}# No allow-interfaces defined
+{{ end }}
 enable-dbus=yes
 disallow-other-stacks=yes
 cache-entries-max=256
 clients-max=256
 ratelimit-interval-usec=1000000
 ratelimit-burst=1000
-{{ if .Data.avahi.browsedomains }}browse-domains={{ range $i, $domain := .Data.avahi.browsedomains }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
+{{ if .Data.avahi.browse_domains }}browse-domains={{ range $i, $domain := .Data.avahi.browse_domains }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
 #check-response-ttl=no
 #use-iff-running=no
 #allow-point-to-point=no
@@ -33,8 +36,11 @@ publish-hinfo=yes
 publish-workstation=no
 publish-domain=yes
 #disable-user-service-publishing=no
-{{ if .Data.avahi.publishdns }}publish-dns-servers={{ range $i, $domain := .Data.avahi.publishdns }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
-#publish-resolv-conf-dns-servers=yes
+{{ if .Data.avahi }}
+{{ if .Data.avahi.publish_dns }}publish-dns-servers={{ range $i, $domain := .Data.avahi.publish_dns }}{{if $i}},{{end}}{{ $domain }}{{end}}{{ end }}
+{{ else }}
+publish-resolv-conf-dns-servers=yes
+{{ end }}
 #publish-aaaa-on-ipv4=yes
 #publish-a-on-ipv6=no
 
@@ -50,3 +56,4 @@ rlimit-fsize=0
 rlimit-nofile=768
 rlimit-stack=4194304
 rlimit-nproc=3
+

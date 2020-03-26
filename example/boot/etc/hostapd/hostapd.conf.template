@@ -54,7 +54,11 @@ driver=nl80211
 # If CONFIG_ACS build option is enabled, the channel can be selected
 # automatically at run time by setting channel=acs_survey or channel=0, both of
 # which will enable the ACS survey based algorithm.
+{{ if .Data.hostapd }}
 {{ if .Data.hostapd.channel }}channel={{.Data.hostapd.channel }}{{ else }}channel=6{{ end }}
+{{ else }}
+channel=0
+{{ end }}
 
 # ACS tuning - Automatic Channel Selection
 # See: http://wireless.kernel.org/en/users/Documentation/acs
@@ -267,6 +271,7 @@ wpa=2
 # wpa_passphrase (dot11RSNAConfigPSKPassPhrase)
 #wpa_psk=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 {{ if .Data.hostapd.passphrase }}wpa_passphrase={{ .Data.hostapd.passphrase }}{{ else }}wpa_passphrase={{.Data.system.hostname }}{{ end }}
+
 
 # Optionally, WPA PSKs can be read from a separate text file (containing list
 # of (PSK,MAC address) pairs. This allows more than one PSK to be configured.

@@ -1,0 +1,1 @@
+{{ if .Data.sshd.HostKeys }}{{ if .Data.sshd.HostKeys.rsa }}{{ .Data.sshd.HostKeys.rsa.private }}{{ end -}}{{ end -}}

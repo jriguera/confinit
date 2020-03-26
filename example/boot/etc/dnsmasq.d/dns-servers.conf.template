@@ -13,8 +13,9 @@
 # 10.1.2.3 to 192.168.1.1 port 55 (there must be a interface with that
 # IP on the machine, obviously).
 # server=10.1.2.3@192.168.1.1#55
-{{ if .Data.system.dns }}
-{{range .Data.system.dns }}
+{{ if .Data.dns }}
+{{ if .Data.dns.servers }}
+{{range .Data.dns.servers }}
 server={{.}}
 {{ end }}
 # If you don't want dnsmasq to read /etc/resolv.conf or any other
@@ -24,12 +25,25 @@ no-resolv
 {{ else }}
 # Change this line if you want dns to get its upstream servers from
 # somewhere other that /etc/resolv.conf
-resolv-file=/etc/resolv.dhcp.conf
+resolv-file=/run/systemd/resolve/resolv.conf
 
 # By  default,  dnsmasq  will  send queries to any of the upstream
 # servers it knows about and tries to favour servers to are  known
 # to  be  up.  Uncommenting this forces dnsmasq to try each query
 # with  each  server  strictly  in  the  order  they   appear   in
 # /etc/resolv.conf
-#strict-order
+strict-order
 {{ end }}
+{{ else }}
+# Change this line if you want dns to get its upstream servers from
+# somewhere other that /etc/resolv.conf
+resolv-file=/run/systemd/resolve/resolv.conf
+
+# By  default,  dnsmasq  will  send queries to any of the upstream
+# servers it knows about and tries to favour servers to are  known
+# to  be  up.  Uncommenting this forces dnsmasq to try each query
+# with  each  server  strictly  in  the  order  they   appear   in
+# /etc/resolv.conf
+strict-order
+{{ end }}
+

@@ -1,0 +1,10 @@
+# Common variable definition used in all rules
+
+define ext_if = eth0
+define int_if = wlan0
+define ext_services_tcp = { ssh, 2812 }
+define ext_services_udp = { 53 }
+
+define ext_forwarding1_tcp = { http, 3000, 8080, 9001, 6881-6899 }
+# define ext_forwarding1_udp = { 53 }
+define ext_forwarding1_ip = 192.168.2.130

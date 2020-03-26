@@ -1,2 +1,2 @@
-{{ if .Data.mail.alias }}{{ range $k, $v := .Data.mail.alias }}{{ $k }}: {{ $v }}
+{{ if .Data.smtp.alias }}{{ range $k, $v := .Data.smtp.alias }}{{ $k }}: {{ $v }}
 {{ end }}{{ end }}

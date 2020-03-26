@@ -7,6 +7,7 @@ security:	root
 postmaster:	root
 hostmaster:	root
 monit: 		root
-root: 		{{ .Data.system.user.name }}
-{{ .Data.system.user.name }}:		{{ .Data.system.user.email }}
-
+root: 		pi
+pi:		{{ .Data.system.pi.email }}
+{{ if .Data.system.users }}{{ range $i, $user := .Data.system.users }}{{ $user.name }}:		{{ $user.email }}
+{{ end }}{{ end }}

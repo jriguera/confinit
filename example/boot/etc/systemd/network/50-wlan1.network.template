@@ -1,0 +1,72 @@
+{{ $hostapd := .Data.hostapd -}}
+{{ range $key, $value := .Data.networking -}}
+{{ if eq $key "wlan1" -}}
+[Match]
+Name={{ $key }}
+{{ if $value.Mac }}MACAddress={{ $value.Mac }}{{ end }}
+
+[Network]
+{{ if $value.DefaultRoute -}}
+DefaultRouteOnDevice=yes
+DNSDefaultRoute=yes
+{{ end -}}
+{{ if $value.NoLink -}}
+ConfigureWithoutCarrier=true
+IgnoreCarrierLoss=true
+{{ end -}}
+{{ if $hostapd }}{{ if eq $hostapd.forwarding $key -}}
+IPForward={{ if $value.ForceIPv4 }}ipv4{{ else}}yes{{ end }}
+{{ else if eq $hostapd.iface $key -}}
+IPMasquerade=yes
+IPForward={{ if $value.ForceIPv4 }}ipv4{{ else}}yes{{ end }}
+{{ end }}{{ end -}}
+{{ if $value.Profile -}}
+  {{- if eq $value.Profile "dhcp" -}}
+DHCP={{ if $value.ForceIPv4 }}ipv4{{ else}}yes{{ end }}
+    {{- if $value.Fallback }}
+LinkLocalAddressing={{ if $value.ForceIPv4 }}ipv4-fallback{{ else }}fallback{{ end }}
+{{ range $i, $ip := $value.Fallback.ip }}Address={{ $ip }}
+{{ end -}}
+{{ if $value.Fallback.gw }}{{ range $i, $gw := $value.Fallback.gw }}Gateway={{ $gw }}
+{{ end }}{{ end -}}
+{{ if $value.Fallback.dns }}DNS={{ range $i, $dns := $value.Fallback.dns }}{{ if $i }} {{ end }}{{ $dns }}{{ end }}{{ end }}
+{{ if $value.Fallback.domains }}Domains={{ range $i, $domain := $value.Fallback.domains }}{{ if $i }} {{ end }}{{ $domain }}{{ end }}{{ end }}
+    {{- else }}
+LinkLocalAddressing={{ if $value.ForceIPv4 }}ipv4{{ else }}no{{ end }}
+    {{- end }}
+
+[DHCPv4]
+UseDomains=true
+UseDNS=true
+UseNTP=true
+UseHostname=true
+UseTimezone=false
+UseRoutes=true
+MaxAttempts={{ if $value.Fallback.DHCPTimeoutAttempts }}{{ $value.Fallback.DHCPTimeoutAttempts }}{{ else }}infinity{{ end }}
+RouteMetric={{ if $value.RouteMetric }}{{ $value.RouteMetric }}{{ else }}25{{ end }}
+{{ if $value.ClientIdentifier -}}
+ClientIdentifier=duid-only
+DUIDType=uuid
+DUIDRawData={{ $value.ClientIdentifier }}
+{{ else -}}
+ClientIdentifier=mac
+{{ end }}
+[DHCPv6]
+UseDomains=true
+UseDNS=true
+UseNTP=true
+  {{- else if eq $value.Profile "static" -}}
+LinkLocalAddressing={{ if $value.ForceIPv4 }}ipv4{{ else }}no{{ end }}
+{{ range $i, $ip := $value.ip }}Address={{ $ip }}
+{{ end -}}
+{{ if $value.gw }}{{ range $i, $gw := $value.gw }}Gateway={{ $gw }}
+{{ end }}{{ end -}}
+{{ if $value.dns }}DNS={{ range $i, $dns := $value.dns }}{{ if $i }} {{ end }}{{ $dns }}{{ end }}{{ end }}
+{{ if $value.domains }}Domains={{ range $i, $domain := $value.domains }}{{ if $i }} {{ end }}{{ $domain }}{{ end }}{{ end }}
+  {{- end }}
+{{ else -}}
+LinkLocalAddressing={{ if $value.ForceIPv4 }}ipv4{{ else }}yes{{ end }}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+

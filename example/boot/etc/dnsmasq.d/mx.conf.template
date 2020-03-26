@@ -1,0 +1,31 @@
+# Return an MX record named "maildomain.com" with target
+# servermachine.com and preference 50
+#mx-host=maildomain.com,servermachine.com,50
+
+# Set the default target for MX records created using the localmx option.
+#mx-target=local
+
+# Return an MX record pointing to the mx-target for all local machines.
+localmx
+
+# Return an MX record pointing to itself for all local machines.
+#selfmx
+
+# The following line shows how to make dnsmasq serve an arbitrary PTR
+# record. This is useful for DNS-SD. (Note that the
+# domain-name expansion done for SRV records _does_not
+# occur for PTR records.)
+#ptr-record=_http._tcp.dns-sd-services,"New Employee Page._http._tcp.dns-sd-services"
+# Change the following lines to enable dnsmasq to serve TXT records.
+# These are used for things like SPF and zeroconf. (Note that the
+# domain-name expansion done for SRV records _does_not
+# occur for TXT records.)
+#Example SPF.
+#txt-record=example.com,"v=spf1 a -all"
+#Example zeroconf
+#txt-record=_http._tcp.example.com,name=value,paper=A4
+# Provide an alias for a "local" DNS name. Note that this _only_ works
+# for targets which are names from DHCP or /etc/hosts. Give host
+# "bert" another name, bertrand
+#cname=bertand,bert
+

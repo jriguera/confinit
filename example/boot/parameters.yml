@@ -2,138 +2,311 @@
 # https://gist.github.com/kimus/9315140
 
 system:
-  forceresolvconf: false
-  forceipv4: true
-  dhcptimeout: 360
+  force_ipv4: true
   domain: 'local'
   hostname: raspi
-# dns: [ '1.1.1.1' ]
-  country: ES
+# watchdog: 14s
+  country: NL
   timezone: 'Europe/Amsterdam'
   lang: 'en_GB.UTF-8'
-# watchdog: 10s
-  user:
-    name: 'pi'
-    email: 'hola@gmail.com'
-    password: 'raspberry'
-  monit:
-    users:
-      monit: 'admin'
-      guest: 'guest read-only'
-    alerts:
-      fs: '90% for 5 times within 15 cycles'
-      system:
-        load1: 6
-        load5: 4
-        mem: '98% for 10 cycles'
-        cpu: '95% for 10 cycles'
-        swap: '1%'
-      eth0:
-        upload: "100 MB in last hour"
-        download: "100 MB in last hour"
-      wlan0:
-        upload: "100 MB in last hour"
-        download: "100 MB in last hour"
+# Default user is always pi
+  pi:
+    email: 'exmaple@gmail.com'
+    password: 'hola'
+    groups: [pi, adm, dialout, cdrom, sudo, audio, video, plugdev, games, users, input, netdev, admin, docker, gpio, i2c, spi]
+    public_keys:
+      - 'ssh-rsa AAAAB3NzaC .... XIFGBH jriguera@xoguete'
+    #crypted_password: '$6$BlT0nAl3DvEgQOUn$RM5QvKpGl93hy5FaaCZ8nNieSsclPrl5.y.uR3einQnG55DPjs0r0saQtgA3mGkY638A5epeIaiShy9uT9fKQ.'
+# Other users
+  users:
+  - name: 'jose'
+    email: 'example@gmail.com'
+    comment: "Jose Riguera"
+    password: 'hola'
+    groups: [ audio, video, plugdev, games, users, input, netdev, spi, i2c, gpio, docker ]
+    disabled: false
+    public_keys:
+      - 'ssh-rsa AAAAB3NzaC .... XIFGBH jriguera@xoguete'
+    #crypted_password: '$6$BlT0nAl3DvEgQOUn$RM5QvKpGl93hy5FaaCZ8nNieSsclPrl5.y.uR3einQnG55DPjs0r0saQtgA3mGkY638A5epeIaiShy9uT9fKQ.'
+    #uid: '1005'
+    #shell: '/bin/bash'
 
 networking:
   eth0:
-    profile: 'dhcp'
-    fallback:
-       ip: '192.168.1.10/24'
-       gw: '192.168.1.1'
-       dns:
-       - 1.1.1.1
-       - 8.8.8.8
-# wlan0:
-#   profile: 'static'
-#   ip: 10.1.1.1/24
-#   forward: 'eth0'
-#   nolink: true
+    ForceIPv4: true
+    Profile: 'dhcp'
+#   Fallback:
+#     DHCPTimeoutAttempts: 3
+#     ip:
+#     - '192.168.1.10/24'
+#     gw:
+#     - '192.168.1.1'
+#     dns:
+#     - 1.1.1.1
+#     - 8.8.8.8
+  wlan0:
+    # This is an WIFI AP config. See hostapd and dhcp configuration
+    # for more settings
+    Profile: 'static'
+    ip:
+    - '10.1.1.1/24'
+    NoLink: true
+  # # To enable WIFI. Remember to disable hostapd and dhcp!
+  # wlan0:
+  #   Profile: 'dhcp'
+  #   Wlan:
+  #     ssid: 'WIFI'
+  #     psk: 'password'
+  #     # for Hidden wifis
+  #     #scan_ssid: 1
 
-### condition services
+### conditional services
+# These are only started if the root key is defined
 
+## Monit, controls all the rest of services. You can use with the web
+# interface and the regular pi user
+monit:
+  ListenAddress:
+  - 0.0.0.0
+  Port: 2812
+  Alerts:
+    eth0:
+    wlan0:
+    fs: '90% for 5 times within 15 cycles'
+    system:
+      load1: 10
+      load5: 4
+      mem: '98% for 10 cycles'
+      cpu: '95% for 10 cycles'
+      swap: '1%'
+# Users:
+#   monit: 'admin'
+#   guest: 'guest read-only'
+
+
+## nftables firewall
+nftables:
+  # Default rules
+  rules: |
+    flush ruleset
+    table inet filter {
+      chain input {
+        type filter hook input priority 0;
+      }
+      chain forward {
+        type filter hook forward priority 0;
+      }
+      chain output {
+        type filter hook output priority 0;
+      }
+    }
+# Example:
+# rules: |
+#   flush ruleset
+#   # include "/etc/nftables/variables-definition.rules"
+#   define ext_if = eth0
+#   define int_if = wlan0
+#   define ext_services_tcp = { ssh, 2812 }
+#   define ext_services_udp = { 53 }
+#   define ext_forwarding1_tcp = { http, 6881-6899 }
+#   define ext_forwarding1_ip = 10.0.0.10
+#   include "/etc/nftables/firewall.rules"
+#   include "/etc/nftables/nat-ipv4.rules"
+#
+# Another basic example
+# rules: |
+#   flush ruleset
+#   # Basic firewall example, accep ssh and docker
+#   table inet filter {
+#     chain input {
+#       type filter hook input priority 0; policy drop;
+#       # accept any localhost traffic
+#       iif lo accept
+#       # accept traffic originated from us
+#       ct state established,related accept
+#       # drop invalid packets
+#       ct state invalid counter drop
+#       # accept ssh, http, and https
+#       tcp dport { 22, 80, 443 } accept
+#       # accept icmp
+#       ip protocol icmp accept
+#       # accept all icmpv6
+#       ip6 nexthdr icmpv6 accept
+#       # count and reject everything else
+#       counter reject with icmpx type admin-prohibited
+#     }
+#     chain forward {
+#       type filter hook forward priority 0; policy drop;
+#     }
+#     chain output {
+#       type filter hook output priority 0; policy accept;
+#     }
+#   }
+
+
+## Dnsmasq dns server
+dns:
+  ifaces:
+  - eth0
+  - wlan0
+  # If no servers defined, ones from dhcp will be used
+  servers:
+  - '1.1.1.1'
+  - '8.8.8.8'
+# domains:
+#   hosts:
+#   - A: '192.168.1.10'
+#     domains: ["server1.local", "server1.nl.local"]
+#   mappings:
+#   - domain: "double-click.net"
+#     server: 127.0.0.1
+#   routes:
+#   - domain: "wireless.thekelleys.org.uk"
+#     subnet: 192.168.2.0/24 
+
+
+## Prometheus Node Exporter
 node_exporter: true
 
-sshd: true
 
-## see docker-compose folder for the services
+##  SSH
+sshd:
+  ListenAddress:
+  - 0.0.0.0
+  Port: 22
+  PermitRootLogin: prohibit-password
+  LoginGraceTime: 2m
+# MaxStartups: "5:30:10"
+  MaxAuthTries: 6
+  MaxSessions: 10
+  PasswordAuthentication: 'yes'
+  AllowTcpForwarding: 'yes'
+  X11Forwarding: 'no'
+  PrintMotd: 'no'
+# AcceptEnv: "LANG LC_*"
+# PrintLastLog: yes
+# TCPKeepAlive: yes
+# Compression: delayed
+  KeygenVersion: 1
+  HostKeys:
+    rsa:
+      private: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
+        ...
+        1TET0IrXmOi/cUy/AAAAEHJvb3RAcmFzcGJlcnJ5cGkBAg==
+        -----END OPENSSH PRIVATE KEY-----
+      public: ssh-rsa AAAAB3 ... Nast root@raspberrypi
+
+
+## Docker and docker-compose, see docker-compose file (next to this one) for
+# the services. Secret env vars are defined here.
 docker:
-  portainer:
+  timeout: 300
+  max_concurrent_uploads: 1
+  max_concurrent_downloads: 2
+  Portainer:
     apps: https://github.com/jriguera/docker-portainer/raw/master/rpi/apps.json
-  compose:
+  Compose:
+    timeout: 300
     name: system
     image: "jriguera/dockercompose"
     env:
+      MQTT_HOST: 'mqtt.internal'
+      HA_MQTT_USER: 'ha'
+      HA_MQTT_PASS: 'hola'
+      HA_API_TOKEN: 'adssafa'
+      HA_BASE_URL: 'ha.local'
       MYSQL_HOST: 'db.internal'
-      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_ROOT_PASSWORD: 'hola'
+      HA_DB_NAME: 'ha'
+      HA_DB_USER: 'ha'
+      HA_DB_PASS: 'hola'
 
+
+## Avahi-daemon
 avahi:
-  ifaces: eth0
+  ifaces:
+  - eth0
+  - wlan0
   publish: true
-  browsedomains: []
-  publishdns:
-  - 8.8.8.8
+# browse_domains: []
+# publish_dns:
+# - 8.8.8.8
 
-#bluetooth:
-#  name: "RaspbianCloud Bluez"
-#  discoverable_time: 300
-#  pairable_time: 0
-#  resolving: false
-#  fast_connect: true
-#  reconnect_uuids: []
 
-#betterclone:
-#  snapshots:
-#    indexes: 6
-#    keep: 1
-#  backups:
-#    keep:
-#      initial: 1
-#      daily: 7
-#      weekly: 4
-#      monthly: 6
-#    rclone:
-#      id: GDrive
-#      destination: /backups/raspi/data
-#      conf: |
-#        type = drive
-#        scope = drive
-#        token = {"access_token":"blabla","expiry":"2018-10-28T12:17:43.881785294+01:00"}
+## Bluetooth daemon
+bluetooth:
+  name: "Raspi"
+  discoverable_time: 300
+  pairable_time: 0
+  resolving: false
+  fast_connect: true
+# reconnect_uuids: []
 
-#hostapd:
-#  iface: wlan0
-#  ssid: raspiwifi
-#  passphrase: 'hola'
-#  hidden: true
-#  mode: g
-#  channel: 6
-#  hidden: true
-#  wpa_mgmt: 'WPA-PSK'
-#  country: NL
-#  deny: []
 
-#dhcp:
-#  iface: wlan0
-#  range: "10.1.1.10,10.1.1.100"
-#  gw: 10.1.1.1
-#  ntp:
-#  - 10.1.1.1
-#  dns:
-#  - 10.1.1.1
-#  domain: local
-#  leasing: "24h"
+## OpenSMTP server, local is always enabled
+smtp:
+  iface: 'lo'
+  expire: '7d'
+  hostname: 'raspi.local'
+  alias:
+    root: 'example@gmail.com'
+    pi: 'pi@gmail.com'
+    monit: 'monit@gmail.com'
+  relay:
+    server: 'mail.google.com:587'
+    sysuser: gmail
+    protocol: 'tls+auth'
+    auth:
+      password: 'saaaaaaa'
+      user: 'user'
 
-#mail:
-#  iface: lo
-#  expire: 7d
-#  alias:
-#    root: 'root@gmail.com'
-#    pi: 'pi@gmail.com'
-#  relay:
-#    server: 'mail.google.com:587'
-#    sysuser: gmail
-#    protocol: 'tls+auth'
-#    auth:
-#      password: blablalbla
-#      user: gmailuser
 
+## Hostapd daemon for WIFI AP
+hostapd:
+  iface: wlan0
+  forwarding: eth0
+  ssid: 'lar'
+  passphrase: 'hola'
+  hidden: false
+# mode: g
+# channel: 6
+# hidden: true
+# wpa_mgmt: 'WPA-PSK'
+# country: NL
+# deny: []
+
+
+## Dnsmasq DHCP configuration to use with hostapd
+dhcp:
+  iface: wlan0
+  range: "10.1.1.10,10.1.1.100"
+  gw: 10.1.1.1
+  ntp:
+  - 10.1.1.1
+  dns:
+  - 10.1.1.1
+# domain: 'nl.local'
+# leasing: "24h"
+
+
+## Backup configuration for /data (/media/volume-data/data) persistent
+# volumes
+betterclone:
+  snapshots:
+    indexes: 6
+    keep: 1
+  backups:
+    keep:
+      initial: 1
+      daily: 7
+      weekly: 4
+      monthly: 6
+    rclone:
+      id: GDrive
+      destination: /backups/raspi/data
+      conf: |
+        type = drive
+        scope = drive
+        token = {"access_token":"yakkkkg","token_type":"Bearer","refresh_token":"1/zzzzz","expiry":"2018-10-28T12:17:43.881785294+01:00"}

@@ -1,4 +1,4 @@
-{{ if .Data.mail.relay }}
+{{ if .Data.smtp.relay }}
 table secrets file:/etc/mail/secrets
-accept for any relay via {{.Data.mail.relay.protocol }}://{{.Data.mail.relay.sysuser }}@{{.Data.mail.relay.server }} auth <secrets> {{ if .Data.mail.hostname }} hostname {{.Data.mail.hostname }} {{ end }}
+accept for any relay via {{.Data.smtp.relay.protocol }}://{{.Data.smtp.relay.sysuser }}@{{.Data.smtp.relay.server }} auth <secrets> {{ if .Data.smtp.hostname }} hostname {{.Data.smtp.hostname }} {{ end }}
 {{ end }}

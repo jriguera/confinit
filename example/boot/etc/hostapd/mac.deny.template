@@ -1,3 +1,2 @@
 {{ if .Data.hostapd.deny }}{{ range $i, $m := .Data.hostapd.deny }}{{ $m }}{{ end }}
 {{ end }}
-

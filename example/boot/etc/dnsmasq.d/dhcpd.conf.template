@@ -52,4 +52,3 @@ dhcp-option=tag:{{ $key }},option:domain-name,{{ .Data.system.domain }}
 # using the MAC address expressed in hex, separated by dashes. 
 dhcp-generate-names=tag:{{ $key }}
 {{ end }}
-

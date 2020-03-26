@@ -1,0 +1,22 @@
+{{ if .Data.dns }}{{ if .Data.dns.domains }}
+# Set a different domain for a particular subnet
+#domain=wireless.thekelleys.org.uk,192.168.2.0/24
+{{ if .Data.dns.domains.routes }}
+{{ range $i, $route := .Data.dns.domains.routes }}
+domain={{ $route.domain }},{{ $route.subnet }}
+{{ end }}
+{{ end }}
+
+# Add domains which you want to force to an IP address here.
+# The example below send any host in double-click.net to a local
+# web-server.
+#address=/double-click.net/127.0.0.1
+#address=/self.my/::1
+#address=/self.my/127.0.0.1
+{{ if .Data.dns.domains.mappings }}
+{{ range $i, $map := .Data.dns.domains.mappings }}
+address=/{{ $map.domain }}/{{ $map.server }}
+{{ end }}
+{{ end }}
+
+{{ end }}{{ end }}

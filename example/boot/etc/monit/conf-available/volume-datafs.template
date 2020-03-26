@@ -3,14 +3,16 @@
 ## stop may be cascaded to them before the filesystem will become full and data
 ## lost.
 #
-check filesystem volume-datafs with path /media/volume-data
-    if space usage > {{.Data.system.monit.alerts.fs }} then alert
+{{ if .Data.monit }}{{ if .Data.monit.Alerts }}{{ if .Data.monit.Alerts.fs }}
+check filesystem volume-data.fs with path /media/volume-data
+    if space usage > {{.Data.monit.Alerts.fs }} then alert
     if inode usage > 95% then alert
     if changed fsflags then alert
     group system
     group datafs
 
-check program volume-datafs-status with path "/bin/btrfs-check -m /media/volume-data"
+check program volume-data.status with path "/bin/btrfs-check-raid /media/volume-data"
     if status != 0 then alert
     group system
     group datafs
+{{ end }}{{ end }}{{ end }}

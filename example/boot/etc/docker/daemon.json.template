@@ -1,0 +1,16 @@
+{
+{{- if .Data.docker }}
+{{ if .Data.docker.max_concurrent_uploads }}  "max-concurrent-uploads": {{.Data.docker.max_concurrent_uploads}},{{ end -}}
+{{ if .Data.docker.max_concurrent_downloads }}  "max-concurrent-downloads": {{.Data.docker.max_concurrent_downloads}},{{ end -}}
+{{- end }}
+  "labels": [ "os=linux", "arch=arm32" ],
+  "experimental": false,
+  "storage-driver": "overlay2",
+  "log-driver": "json-file",
+  "log-level": "info",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "2"
+  },
+  "debug": false
+}

@@ -3,11 +3,12 @@
 ## usage. Each test specifies a resource, conditions and the action to be
 ## performed should a test fail.
 #
+{{ if .Data.monit }}{{ if .Data.monit.Alerts }}{{ if .Data.monit.Alerts.system }}
 check system $HOST
-    if loadavg (1min) > {{.Data.system.monit.alerts.system.load1 }} then alert
-    if loadavg (5min) > {{.Data.system.monit.alerts.system.load5 }} then alert
-    if cpu usage > {{.Data.system.monit.alerts.system.cpu }} then alert
-    if memory usage > {{.Data.system.monit.alerts.system.mem }} then alert
-    if swap usage > {{.Data.system.monit.alerts.system.swap }} then alert
+{{ if .Data.monit.Alerts.system.load1 }}    if loadavg (1min) > {{.Data.monit.Alerts.system.load1 }} then alert{{ end }}
+{{ if .Data.monit.Alerts.system.load5 }}    if loadavg (5min) > {{.Data.monit.Alerts.system.load5 }} then alert{{ end }}
+{{ if .Data.monit.Alerts.system.cpu }}    if cpu usage > {{.Data.monit.Alerts.system.cpu }} then alert{{ end }}
+{{ if .Data.monit.Alerts.system.mem }}    if memory usage > {{.Data.monit.Alerts.system.mem }} then alert{{ end }}
+{{ if .Data.monit.Alerts.system.swap }}    if swap usage > {{.Data.monit.Alerts.system.swap }} then alert{{ end }}
     group system
-
+{{ end }}{{ end }}{{ end }}

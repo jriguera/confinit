@@ -1,0 +1,108 @@
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+#
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+Port {{ if .Data.sshd.Port }}{{ .Data.sshd.Port }}{{ else }}22{{ end }}
+#AddressFamily any
+{{ if .Data.sshd.ListenAddress }}
+{{ range $i, $addr := .Data.sshd.ListenAddress }}ListenAddress {{ $addr }}
+{{end}}
+{{ else }} 
+ListenAddress 0.0.0.0
+ListenAddress ::
+{{ end }}
+UseDNS no
+PidFile /var/run/sshd.pid
+SyslogFacility AUTH
+LogLevel INFO
+
+# Ciphers and keying
+#RekeyLimit default none
+
+{{ if .Data.sshd.HostKeys }}
+HostKey {{ if .Data.sshd.HostKeys.rsa }}/etc/ssh/rsa_key{{ else }}/etc/ssh/ssh_host_rsa_key{{ end }}
+HostKey {{ if .Data.sshd.HostKeys.ecdsa }}/etc/ssh/ecdsa_key{{ else }}/etc/ssh/ssh_host_ecdsa_key{{ end }}
+HostKey {{ if .Data.sshd.HostKeys.ed25519 }}/etc/ssh/ed25519_key{{ else }}/etc/ssh/ssh_host_ed25519_key{{ end }}
+{{ else }}
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+{{ end }}
+
+# Authentication
+StrictModes yes
+PermitRootLogin {{ if .Data.sshd.PermitRootLogin }}{{ .Data.sshd.PermitRootLogin }}{{ else }}no{{ end }}
+LoginGraceTime {{ if .Data.sshd.LoginGraceTime }}{{ .Data.sshd.LoginGraceTime }}{{ else }}1m{{ end }}
+MaxAuthTries {{ if .Data.sshd.MaxAuthTries }}{{ .Data.sshd.MaxAuthTries }}{{ else }}5{{ end }}
+MaxSessions {{ if .Data.sshd.MaxSessions }}{{ .Data.sshd.MaxSessions }}{{ else }}10{{ end }}
+PubkeyAuthentication yes
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+#AuthorizedKeysFile	.ssh/authorized_keys .ssh/authorized_keys2
+#AuthorizedPrincipalsFile none
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+HostbasedAuthentication no
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+IgnoreUserKnownHosts no
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts yes
+PasswordAuthentication {{ if .Data.sshd.PasswordAuthentication }}{{ .Data.sshd.PasswordAuthentication }}{{ else }}yes{{ end }}
+PermitEmptyPasswords no
+# Change to yes to enable challenge-response passwords (beware issues with some PAM modules and threads)
+ChallengeResponseAuthentication no
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM yes
+
+#AllowAgentForwarding yes
+AllowTcpForwarding {{ if .Data.sshd.AllowTcpForwarding }}{{ .Data.sshd.AllowTcpForwarding }}{{ else }}yes{{ end }}
+#GatewayPorts no
+X11Forwarding {{ if .Data.sshd.X11Forwarding }}{{ .Data.sshd.X11Forwarding }}{{ else }}no{{ end }}
+#X11DisplayOffset 10
+#X11UseLocalhost yes
+#PermitTTY yes
+PrintMotd {{ if .Data.sshd.PrintMotd }}{{ .Data.sshd.PrintMotd }}{{ else }}yes{{ end }}
+PrintLastLog {{ if .Data.sshd.PrintLastLog }}{{ .Data.sshd.PrintLastLog }}{{ else }}yes{{ end }}
+TCPKeepAlive {{ if .Data.sshd.TCPKeepAlive }}{{ .Data.sshd.TCPKeepAlive }}{{ else }}yes{{ end }}
+#UseLogin no
+Compression {{ if .Data.sshd.Compression }}{{ .Data.sshd.Compression }}{{ else }}delayed{{ end }}
+#ClientAliveInterval 0
+#ClientAliveCountMax 3
+MaxStartups {{ if .Data.sshd.MaxStartups }}{{ .Data.sshd.MaxStartups }}{{ else }}5:30:10{{ end }}
+#PermitTunnel no
+#ChrootDirectory none
+#VersionAddendum none
+#Banner none
+
+# Allow client to pass locale environment variables
+AcceptEnv {{ if .Data.sshd.AcceptEnv }}{{ .Data.sshd.AcceptEnv | join " " }}{{ else }}LANG LC_*{{ end }}
+PermitUserEnvironment no
+
+# Kerberos options
+#KerberosAuthentication no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+#KerberosGetAFSToken no
+
+# GSSAPI options
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+#GSSAPIStrictAcceptorCheck yes
+#GSSAPIKeyExchange no
+
+# override default of no subsystems
+Subsystem	sftp	/usr/lib/openssh/sftp-server
+
