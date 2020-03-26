@@ -3,7 +3,6 @@ Description=Confinit
 DefaultDependencies=no
 Wants=systemd-remount-fs.service
 After=systemd-remount-fs.service
-Before=local-fs-pre.target
 ConditionFileIsExecutable=/bin/confinit
 
 [Install]

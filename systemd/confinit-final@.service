@@ -3,10 +3,9 @@ Description=Confinit (final stage) on /%I
 DefaultDependencies=no
 Requires=network.target local-fs.target
 Wants=confinit-boot@%i.service
-After=confinit-boot@%i.service network-online.target bluetooth.service systemd-timesyncd.service
-After= docker.service
-Before=rc-local.service shutdown.target
-Before=docker-compose.target monit.service
+After=confinit-boot@%i.service network-online.target
+After=bluetooth.service docker.service systemd-timesyncd.service
+Before=docker-compose.target monit.service rc-local.service shutdown.target
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/.confinit-final.yml
@@ -14,7 +13,6 @@ RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
-# RemainAfterExit=yes
 User=root
 Group=root
 ExecStart=/bin/confinit --config /%I/.confinit-final.yml

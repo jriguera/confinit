@@ -4,6 +4,7 @@ DefaultDependencies=no
 Wants=systemd-remount-fs.service boot.mount
 After=systemd-remount-fs.service boot.mount
 Before=network-pre.target
+Before=systemd-resolved.service systemd-timesyncd.service systemd-networkd.service
 Conflicts=shutdown.target
 ConditionFileIsExecutable=/bin/confinit
 ConditionPathExists=/%I/.confinit-boot.yml
@@ -21,3 +22,4 @@ StandardOutput=file:/var/log/confinit-boot-%N.log
 [Install]
 WantedBy=confinit.target
 DefaultInstance=confinit-boot@boot-config.service
+
