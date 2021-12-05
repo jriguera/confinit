@@ -170,6 +170,9 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	if err := ft.mkdir(filepath.Dir(data.Destination), dirmode); err != nil {
 		return err
 	}
+	if err := os.Truncate(data.Destination, 0); err != nil {
+		return err
+	}
 	tpl, err := template.New(data.Source).Funcs(tfunc.TemplateFuncMap()).ParseFiles(data.SourceFullPath)
 	if err != nil {
 		return err
@@ -177,7 +180,7 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	if ft.FileMode != 0 {
 		filemode = ft.FileMode
 	}
-	dst, err := os.OpenFile(data.Destination, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filemode)
+	dst, err := os.OpenFile(data.Destination, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, filemode)
 	if err != nil {
 		err = fmt.Errorf("Cannot create file %s, %s", data.Destination, err)
 		return err
