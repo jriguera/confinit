@@ -20,6 +20,11 @@ func ToTime(i interface{}) time.Time {
 	return v
 }
 
+func ToTimeInDefaultLocation(i interface{}, location *time.Location) time.Time {
+	v, _ := ToTimeInDefaultLocationE(i, location)
+	return v
+}
+
 // ToDuration casts an interface to a time.Duration type.
 func ToDuration(i interface{}) time.Duration {
 	v, _ := ToDurationE(i)
@@ -161,6 +166,24 @@ func ToStringSlice(i interface{}) []string {
 // ToIntSlice casts an interface to a []int type.
 func ToIntSlice(i interface{}) []int {
 	v, _ := ToIntSliceE(i)
+	return v
+}
+
+// ToInt64Slice casts an interface to a []int64 type.
+func ToInt64Slice(i interface{}) []int64 {
+	v, _ := ToInt64SliceE(i)
+	return v
+}
+
+// ToUintSlice casts an interface to a []uint type.
+func ToUintSlice(i interface{}) []uint {
+	v, _ := ToUintSliceE(i)
+	return v
+}
+
+// ToFloat64Slice casts an interface to a []float64 type.
+func ToFloat64Slice(i interface{}) []float64 {
+	v, _ := ToFloat64SliceE(i)
 	return v
 }
 
