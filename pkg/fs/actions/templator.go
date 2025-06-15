@@ -170,9 +170,6 @@ func (ft *Templator) renderTemplate(data *TemplateData, dirmode, filemode os.Fil
 	if err := ft.mkdir(filepath.Dir(data.Destination), dirmode); err != nil {
 		return err
 	}
-	if err := os.Truncate(data.Destination, 0); err != nil {
-		return err
-	}
 	tpl, err := template.New(data.Source).Funcs(tfunc.TemplateFuncMap()).ParseFiles(data.SourceFullPath)
 	if err != nil {
 		return err
