@@ -132,8 +132,8 @@ var templateFunctionsMapping = map[string]interface{}{
 	"replace":    Replace,
 	"toString":   ToString,
 	"toBool":     ToBool,
-	"ToFloat":    ToBool,
-	"ToInt":      ToBool,
+	"toFloat":    ToFloat,
+	"toInt":      ToInt,
 	// Math
 	"add":   Add,
 	"sub":   Sub,
